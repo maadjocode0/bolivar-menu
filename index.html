@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="bolivar.png" />
 </head>
 <body>
 
@@ -27,6 +29,37 @@
     <section class="section" id="menu">
       <div id="menuContainer"></div>
     </section>
+    <section class="section">
+      <div class="footer-card">
+
+        <div class="footer-photo">
+          <img src="bolivar.png" alt="Bolivar Coffee & Lounge" />
+          <div class="footer-photo-overlay">
+            <span>Bolivar Coffee & Lounge</span>
+          </div>
+        </div>
+
+        <div class="footer-map">
+          <iframe
+            src="https://maps.google.com/maps?q=Bolivar+Coffee+Lounge+Tunis&output=embed"
+            width="100%"
+            height="200"
+            style="border:none;border-radius:16px"
+            loading="lazy">
+          </iframe>
+        </div>
+
+        <div class="footer-actions">
+          <a href="https://maps.app.goo.gl/axfWhbAWhV2owF698?g_st=ic" target="_blank" class="footer-btn location-btn">
+             Voir sur Google Maps
+          </a>
+          <a href="https://search.google.com/local/writereview?placeid=ChIJUdJMBQA3_RIRrn223m53Eow" target="_blank" class="footer-btn review-btn">
+            Laisser un avis
+          </a>
+        </div>
+
+      </div>
+    </section>
 
     <section class="section">
       <div class="section-head">
@@ -35,9 +68,20 @@
       <div class="info-card">
         <p><strong>Téléphone :</strong> +216 00 000 000</p>
         <p><strong>Horaires :</strong> Lun-Dim, 08:00 - 23:00</p>
+        <div class="social-links">
+          <a href="#" class="social-btn instagram-btn" target="_blank">
+            <i class="fa-brands fa-instagram"></i>
+            Instagram
+          </a> |
+          <a href="#" class="social-btn facebook-btn" target="_blank">
+            <i class="fa-brands fa-facebook"></i>
+            Facebook
+          </a>
+        </div>
       </div>
     </section>
   </main>
+  
 
   <script src="script.js"></script>
 </body>
