@@ -319,6 +319,56 @@ function init() {
   renderNavbar();
   renderMenu();
   setupScrollSpy();
+  setupSearch();
 }
+function setupSearch() {
+  const input = document.getElementById("searchInput");
+  if (!input) return;
 
+  input.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+
+    if (!query) {
+      document.querySelectorAll(".menu-category").forEach(el => el.style.display = "");
+      document.querySelectorAll(".menu-item").forEach(el => el.style.display = "");
+      const noResults = document.getElementById("noResults");
+      if (noResults) noResults.style.display = "none";
+      return;
+    }
+
+    let anyVisible = false;
+
+    document.querySelectorAll(".menu-category").forEach((catEl) => {
+      let catHasMatch = false;
+
+      catEl.querySelectorAll(".menu-item").forEach((itemEl) => {
+        const name = itemEl.querySelector("h4")?.textContent.toLowerCase() || "";
+        const desc = itemEl.querySelector(".menu-item-desc")?.textContent.toLowerCase() || "";
+        const matches = name.includes(query) || desc.includes(query);
+        itemEl.style.display = matches ? "" : "none";
+        if (matches) catHasMatch = true;
+      });
+
+      catEl.style.display = catHasMatch ? "" : "none";
+
+      if (catHasMatch) {
+        anyVisible = true;
+        const itemsContainer = catEl.querySelector(".category-items");
+        const arrow = catEl.querySelector(".toggle-arrow");
+        if (itemsContainer) itemsContainer.classList.remove("collapsed");
+        if (arrow) arrow.classList.add("open");
+      }
+    });
+
+    let noResults = document.getElementById("noResults");
+    if (!noResults) {
+      noResults = document.createElement("p");
+      noResults.id = "noResults";
+      noResults.className = "no-results";
+      noResults.textContent = "Aucun résultat trouvé.";
+      document.getElementById("menuContainer").appendChild(noResults);
+    }
+    noResults.style.display = anyVisible ? "none" : "block";
+  });
+}
 document.addEventListener("DOMContentLoaded", init);
