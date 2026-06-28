@@ -250,15 +250,15 @@ function renderMenu() {
 
     return `
       <article class="menu-category" id="${id}">
-        <button class="category-toggle" data-target="${id}-items" aria-expanded="true">
+        <button class="category-toggle" data-target="${id}-items" aria-expanded="false">
           <img class="category-bg" src="${imgSrc}" alt="${block.category}" loading="lazy" />
           <div class="category-overlay"></div>
           <div class="category-toggle-inner">
             <h3>${block.category}</h3>
-            <span class="toggle-arrow open">▼</span>
+            <span class="toggle-arrow">▼</span>
           </div>
         </button>
-        <div class="category-items" id="${id}-items">
+        <div class="category-items collapsed" id="${id}-items">
           <div class="menu-list">
             ${block.items.map((item) => `
               <div class="menu-item">
@@ -315,11 +315,56 @@ function setupScrollSpy() {
   categories.forEach((cat) => observer.observe(cat));
 }
 
+function setupStickyHeader() {
+  const header = document.getElementById("siteHeader");
+  const hero = document.querySelector(".hero");
+  if (!header || !hero) return;
+
+  // Keep --header-h in sync with the header's real height so the sticky
+  // category nav (and scroll offsets) sit just below it at every breakpoint.
+  const syncHeight = () => {
+    document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  };
+
+  let ticking = false;
+  const update = () => {
+    // Show the fixed header once the hero has scrolled out of view,
+    // i.e. when its bottom edge reaches the header's resting position.
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    header.classList.toggle("visible", heroBottom <= header.offsetHeight);
+    ticking = false;
+  };
+
+  const refresh = () => { syncHeight(); update(); };
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      window.requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // The header wraps to two rows on mobile and the hero grows as fonts/images
+  // load, so recompute height + visibility whenever either box changes (not
+  // only on scroll) — otherwise an early measurement can leave a stale state.
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(refresh);
+    ro.observe(header);
+    ro.observe(hero);
+  } else {
+    window.addEventListener("resize", refresh, { passive: true });
+  }
+  window.addEventListener("load", refresh);
+
+  refresh();
+}
+
 function init() {
   renderNavbar();
   renderMenu();
   setupScrollSpy();
   setupSearch();
+  setupStickyHeader();
 }
 function setupSearch() {
   const input = document.getElementById("searchInput");

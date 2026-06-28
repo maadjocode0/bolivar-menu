@@ -13,7 +13,10 @@
   --radius-md: 16px;
   --shadow-soft: 0 16px 44px rgba(30, 42, 58, 0.1);
   --shadow-card: 0 10px 30px rgba(30, 42, 58, 0.08);
+  --header-h: 104px;
 }
+
+html { scroll-behavior: smooth; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -82,7 +85,7 @@ h1, h2, h3, h4, p { margin: 0; }
 /* Navbar */
 .category-nav {
   position: sticky;
-  top: 0;
+  top: var(--header-h);
   z-index: 100;
   background: var(--navy);
   border-bottom: 1px solid rgba(201, 149, 106, 0.2);
@@ -402,16 +405,6 @@ h1, h2, h3, h4, p { margin: 0; }
   margin-bottom: 0.15rem;
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
-.search-bar-wrapper {
-  position: sticky;
-  top: 53px;
-  z-index: 99;
-  background: rgba(246, 245, 242, 0.97);
-  backdrop-filter: blur(12px);
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--line);
-}
-
 .search-bar {
   display: flex;
   align-items: center;
@@ -419,10 +412,8 @@ h1, h2, h3, h4, p { margin: 0; }
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 0.55rem 1rem;
-  max-width: 680px;
-  margin: 0 auto;
-  box-shadow: 0 2px 8px rgba(30, 42, 58, 0.06);
+  padding: 0.5rem 1rem;
+  min-width: 0;
 }
 
 .search-icon {
@@ -496,4 +487,129 @@ h1, h2, h3, h4, p { margin: 0; }
   .footer-btn {
     flex: 1;
   }
+}
+
+/* =============================================
+   FIXED HEADER (appears on scroll)
+   ============================================= */
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--navy);
+  border-bottom: 1px solid rgba(201, 149, 106, 0.25);
+  box-shadow: 0 6px 20px rgba(30, 42, 58, 0.25);
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.35s ease, opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.site-header.visible {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.site-header-inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.site-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.site-header-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.site-header-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.site-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.site-header-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(201, 149, 106, 0.35);
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.site-header-link:hover,
+.site-header-link:focus-visible {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Search now lives in the fixed header; full-width row on mobile */
+.site-header .search-bar {
+  flex: 1 1 100%;
+}
+
+/* Desktop: logo/name on the left, search + links on the right, single row */
+@media (min-width: 768px) {
+  :root { --header-h: 64px; }
+
+  .site-header-inner {
+    flex-wrap: nowrap;
+    padding: 0.55rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .site-header-name { font-size: 1.45rem; }
+
+  .site-header-nav {
+    margin-left: 0;
+    order: 3;
+  }
+
+  .site-header .search-bar {
+    flex: 0 1 340px;
+    margin-left: auto;
+    order: 2;
+  }
+}
+
+/* Offset anchor targets so they aren't hidden behind the fixed bars */
+.menu-category,
+#menu,
+#trouver-nous {
+  scroll-margin-top: calc(var(--header-h) + 65px);
 }

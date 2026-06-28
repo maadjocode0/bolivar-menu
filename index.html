@@ -12,7 +12,24 @@
   <link rel="icon" type="image/png" href="logo.png" />
 </head>
 <body>
-  <header class="hero">
+  <header class="site-header" id="siteHeader">
+    <div class="site-header-inner">
+      <a class="site-header-brand" href="#top">
+        <img src="logo.png" alt="Bolivar" class="site-header-logo" />
+        <span class="site-header-name">Bolivar</span>
+      </a>
+      <nav class="site-header-nav">
+        <a href="#menu" class="site-header-link">Voir menu</a>
+        <a href="#trouver-nous" class="site-header-link">Trouver nous</a>
+      </nav>
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Rechercher un article..." />
+      </div>
+    </div>
+  </header>
+
+  <header class="hero" id="top">
     <div class="hero-card">
       <img src="logo.png" alt="Bolivar Coffee & Lounge" class="hero-logo" />
       <h1>Bolivar</h1>
@@ -25,18 +42,12 @@
   <nav class="category-nav">
     <div id="categoryNav" class="nav-pills"></div>
   </nav>
-  <div class="search-bar-wrapper">
-  <div class="search-bar">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" id="searchInput" placeholder="Rechercher un article..." />
-  </div>
-</div>
 
   <main class="container">
     <section class="section" id="menu">
       <div id="menuContainer"></div>
     </section>
-    <section class="section">
+    <section class="section" id="trouver-nous">
       <div class="footer-card">
 
         <div class="footer-photo">
