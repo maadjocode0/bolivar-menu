@@ -200,21 +200,21 @@ const CATEGORY_PLACEHOLDERS = {
   "Smoothies": "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800&q=80",
   "Mojitos": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=800&q=80",
   "Milkshakes": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&q=80",
-  "Frappuccinos": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80",
+  "Frappuccinos": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&q=80",
   "Crêpes & Gaufres Sucrées": "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=800&q=80",
   "Mini Pancakes": "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?w=800&q=80",
-  "Crêpes & Gaufres Salées": "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=800&q=80",
+  "Crêpes & Gaufres Salées": "https://images.unsplash.com/photo-1577953589629-446f28f0d8c1?w=800&q=80",
   "Omelettes": "https://images.unsplash.com/photo-1510693206972-df098062cb71?w=800&q=80",
-  "Libanais": "https://images.unsplash.com/photo-1561651188-d207bbec4ec3?w=800&q=80",
-  "Paninis": "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=800&q=80",
+  "Libanais": "https://images.unsplash.com/photo-1743674453093-592bed88018e?w=800&q=80",
+  "Paninis": "https://images.unsplash.com/photo-1655279562015-047c3da9a271?w=800&q=80",
   "Burgers": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
   "Club Sandwich": "https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=800&q=80",
   "Salades": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
   "Nos Plats": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
   "Nos Pâtes": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&q=80",
   "Nos Desserts": "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80",
-  "Chichas": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
-  "Jeux": "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=800&q=80"
+  "Chichas": "https://images.unsplash.com/photo-1635547821500-77542481940c?w=800&q=80",
+  "Jeux": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=800&q=80"
 };
 
 function slugify(text) {
