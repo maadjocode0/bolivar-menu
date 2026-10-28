@@ -338,6 +338,55 @@ h1, h2, h3, h4, p { margin: 0; }
   font-size: 0.95rem;
   font-style: italic;
 }
+
+/* Menu loading from Supabase */
+.menu-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 1rem;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Shown while an older copy of the menu is on screen */
+.menu-stale {
+  margin-bottom: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-soft);
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* Product photo (added on the admin page) */
+.menu-item-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Product switched off on the admin page */
+.menu-item.is-unavailable h4,
+.menu-item.is-unavailable .item-price { opacity: 0.5; }
+
+.menu-item.is-unavailable .menu-item-photo { filter: grayscale(1); opacity: 0.6; }
+
+.item-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--navy);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 /* =============================================
    FIXED HEADER (appears on scroll)
    ============================================= */

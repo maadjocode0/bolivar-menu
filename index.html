@@ -44,7 +44,9 @@
 
   <main class="container">
     <section class="section" id="menu">
+      <p class="menu-stale" id="menuStale" role="status" hidden>La carte n'a pas pu être mise à jour : certains prix ont peut-être changé.</p>
       <div id="menuContainer"></div>
+      <noscript><p class="menu-loading">Activez JavaScript pour afficher la carte.</p></noscript>
     </section>
   </main>
 
@@ -70,18 +72,19 @@
         <div class="site-footer-col">
           <h4>Contact</h4>
           <ul>
+            <!-- Phone, address, Maps link and hours: replaced by the "Infos" tab of admin.html once saved there -->
             <li>
-              <a href="tel:+21622535138">
+              <a href="tel:+21622535138" id="footerPhone">
                 <i class="fa-solid fa-phone"></i> +216 22 535 138
               </a>
             </li>
             <li>
-              <a href="https://maps.app.goo.gl/axfWhbAWhV2owF698?g_st=ic" target="_blank" rel="noopener">
+              <a href="https://maps.app.goo.gl/axfWhbAWhV2owF698?g_st=ic" target="_blank" rel="noopener" id="footerAddress" data-maps>
                 <i class="fa-solid fa-location-dot"></i> 87 Av. de la République, Megrine 2033
               </a>
             </li>
             <li>
-              <span><i class="fa-regular fa-clock"></i> Lun-Dim, 07:00 - 23:00</span>
+              <span id="footerHours"><i class="fa-regular fa-clock"></i> Lun-Dim, 07:00 - 23:00</span>
             </li>
             <li>
               <a href="https://search.google.com/local/writereview?placeid=ChIJUdJMBQA3_RIRrn223m53Eow" target="_blank" rel="noopener">
@@ -100,7 +103,7 @@
             <a href="https://www.facebook.com/p/Bolivar-Coffee-61574949567827/" target="_blank" rel="noopener" aria-label="Facebook">
               <i class="fa-brands fa-facebook-f"></i>
             </a>
-            <a href="https://maps.app.goo.gl/axfWhbAWhV2owF698?g_st=ic" target="_blank" rel="noopener" aria-label="Google Maps">
+            <a href="https://maps.app.goo.gl/axfWhbAWhV2owF698?g_st=ic" target="_blank" rel="noopener" aria-label="Google Maps" data-maps>
               <i class="fa-solid fa-map-location-dot"></i>
             </a>
           </div>
@@ -117,6 +120,8 @@
     </div>
   </footer>
 
+  <script src="menu-data.js"></script>
+  <script src="supabase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,220 +1,37 @@
-const MENU_DATA = [
-  { category: "Petit Déjeuner", image: "", items: [
-    { name: "L'Express", price: 8, desc: "Café au choix, jus frais, eau 0.5L, viennoiserie (croissant/cake)" },
-    { name: "Le Classique", price: 15, desc: "Café au choix, jus frais, eau 0.5L, viennoiserie, omelette, toasts (beurre, confiture, miel, chocolat)" },
-    { name: "Healthy", price: 18, desc: "Café au choix, jus detox, eau 0.5L, toasts (fromage, charcuterie), omelette, bol flocon d'avoine et granola, salade de fruits" },
-    { name: "Le Gourmand", price: 20, desc: "Café au choix, jus frais, eau 0.5L, viennoiserie, omelette, toasts, planche charcuterie fromage, mini pancakes, salade de fruits" },
-    { name: "Le Tunisien", price: 25, desc: "Café au choix, jus frais, eau 0.5L, cake, sahfa dro3, oeuf dur, huile d'olive, harissa, olives, chamia, goutta, dattes, bsissa, ojja merguez, mlewi" },
-    { name: "L'Impérial (2 personnes)", price: 37, desc: "2 cafés, 2 jus frais, eau 1L, 2 viennoiseries, toasts, omelette, planche charcuterie fromage, mini sandwich, mini pancakes, yaourt" },
-    { name: "Bolivar (2 personnes)", price: 45, desc: "2 cafés, 2 jus frais, eau 1L, 2 viennoiseries, toasts, omelette, planche charcuterie fromage, boulettes de fromage, mini pancakes, mini gaufres, mousse au chocolat, salade de fruits, yaourt" }
-  ]},
-  { category: "Nos Cafés", image: "", items: [
-    { name: "Espresso", price: 4, desc: "" },
-    { name: "Americano", price: 4, desc: "" },
-    { name: "Capucin", price: 4.5, desc: "" },
-    { name: "Chocolat au Lait", price: 4.5, desc: "" },
-    { name: "Nescafé", price: 4.5, desc: "" },
-    { name: "Café Crème", price: 5, desc: "" },
-    { name: "Cappucino", price: 6, desc: "" },
-    { name: "Le Turc", price: 7, desc: "Avec pâtisseries tunisiennes" },
-    { name: "Macchiato Noisette", price: 7, desc: "" },
-    { name: "Macchiato Caramel", price: 7, desc: "" },
-    { name: "Macchiato Nutella", price: 8.5, desc: "" },
-    { name: "Macchiato Spéculoos", price: 8.5, desc: "" },
-    { name: "Café Italien (capsule)", price: 7, desc: "" },
-    { name: "Croissant / Cake", price: 2.5, desc: "" },
-    { name: "Supplément Nestlé / Arôme", price: 2, desc: "" }
-  ]},
-  { category: "Les Thés", image: "", items: [
-    { name: "Thé à la menthe", price: 4, desc: "" },
-    { name: "Thé infusion", price: 5, desc: "" },
-    { name: "Thé aux amandes", price: 7, desc: "" },
-    { name: "Thé aux pignons", price: 9, desc: "" },
-    { name: "Thé baklawa", price: 10, desc: "Fruits secs" }
-  ]},
-  { category: "Chocolat Chaud / Glacé", image: "", items: [
-    { name: "Chocolat Chaud / Glacé", price: 8, desc: "" },
-    { name: "Chocolat Chaud / Glacé Chantilly", price: 10, desc: "" },
-    { name: "Chocolat Chaud / Glacé Aromatisé", price: 10, desc: "" },
-    { name: "Chocolat Chaud / Glacé Nutella ou Spéculoos", price: 12, desc: "" }
-  ]},
-  { category: "Boissons Fraiches", image: "", items: [
-    { name: "Eau 0.5L", price: 2, desc: "" },
-    { name: "Eau 1L", price: 3.5, desc: "" },
-    { name: "Eau gazéifiée", price: 4, desc: "" },
-    { name: "Soda", price: 4, desc: "" },
-    { name: "Boisson énergétique", price: 10, desc: "" }
-  ]},
-  { category: "Ice Coffees", image: "", items: [
-    { name: "Freddo Espresso", price: 6, desc: "" },
-    { name: "Ice Latte", price: 6, desc: "" },
-    { name: "American Ice", price: 6, desc: "" },
-    { name: "Caramel Macchiato", price: 8, desc: "" },
-    { name: "Caramel Salé", price: 8, desc: "" }
-  ]},
-  { category: "Jus et Cocktails", image: "", items: [
-    { name: "Orange", price: 7, desc: "" },
-    { name: "Citronnade", price: 7, desc: "" },
-    { name: "Fraise", price: 8, desc: "" },
-    { name: "Citronnade aux amandes", price: 9, desc: "" },
-    { name: "Lait de poule", price: 9, desc: "" },
-    { name: "Banane - Dattes", price: 10, desc: "" },
-    { name: "Banana Blue", price: 10, desc: "" },
-    { name: "Baratte de fruits secs", price: 12, desc: "" },
-    { name: "Jus de fruits", price: 12, desc: "" },
-    { name: "Modelo Sunrise", price: 12, desc: "Ananas, menthe, citron" },
-    { name: "The Green", price: 12, desc: "Pomme, citron, kiwi" },
-    { name: "Forest Detox", price: 15, desc: "Concombre, pomme, citron, menthe" },
-    { name: "Sunrise Détox", price: 15, desc: "Pomme, kiwi, basilic" },
-    { name: "Cocktail Bolivar", price: 17, desc: "" }
-  ]},
-  { category: "Smoothies", image: "", items: [
-    { name: "Coconut", price: 13, desc: "Base smoothie, fraise, noix de coco" },
-    { name: "Orange Tropical", price: 13, desc: "Base smoothie, orange, ananas, mangue, banane" },
-    { name: "Red Strawberry", price: 13, desc: "Base smoothie, fraise, framboise, miel" },
-    { name: "Midnight Summer", price: 13, desc: "Base smoothie, ananas, melon, blue curaçao" },
-    { name: "Power Rangers", price: 13, desc: "Base smoothie, ananas, melon, fruit de la passion" },
-    { name: "Green Healthy", price: 15, desc: "Base smoothie, concombre, pomme, kiwi, citron, menthe" }
-  ]},
-  { category: "Mojitos", image: "", items: [
-    { name: "Virgin", price: 8, desc: "" },
-    { name: "Midnight Blue", price: 10, desc: "" },
-    { name: "Red Fruit", price: 10, desc: "" },
-    { name: "Asian Fruit", price: 10, desc: "" },
-    { name: "Night Black", price: 10, desc: "" },
-    { name: "Energetic Mojito", price: 13, desc: "" },
-    { name: "Mojito Bolivar", price: 15, desc: "" }
-  ]},
-  { category: "Milkshakes", image: "", items: [
-    { name: "Milkshake Classique", price: 10, desc: "Chocolat / fraise / vanille" },
-    { name: "Milkshake Nutella", price: 12, desc: "" },
-    { name: "Milkshake Spéculoos", price: 12, desc: "" },
-    { name: "Milkshake Oréo", price: 12, desc: "" },
-    { name: "Milkshake Bueno", price: 12, desc: "" }
-  ]},
-  { category: "Frappuccinos", image: "", items: [
-    { name: "Caramel", price: 10, desc: "" },
-    { name: "Vanille", price: 10, desc: "" },
-    { name: "Noisette", price: 10, desc: "" },
-    { name: "Nutella", price: 11, desc: "" },
-    { name: "Spéculoos", price: 11, desc: "" }
-  ]},
-  { category: "Crêpes & Gaufres Sucrées", image: "", items: [
-    { name: "Gaufre / Crêpe Sucre", price: 6, desc: "" },
-    { name: "Gaufre / Crêpe Miel", price: 8, desc: "" },
-    { name: "Gaufre / Crêpe Chocolat", price: 8, desc: "" },
-    { name: "Gaufre / Crêpe Nutella", price: 12, desc: "" },
-    { name: "Gaufre / Crêpe El Mordjene", price: 12, desc: "" },
-    { name: "Crêpe Spéculoos", price: 12, desc: "" },
-    { name: "Crêpe Nutella - Banane", price: 14, desc: "" },
-    { name: "Crêpe Ferrero Rocher", price: 14, desc: "" },
-    { name: "Gaufre / Crêpe Oreo", price: 14, desc: "" },
-    { name: "Gaufre / Crêpe Bueno Bliss", price: 14, desc: "" },
-    { name: "Gaufre / Crêpe Blanche Désir", price: 14, desc: "" },
-    { name: "Gaufre / Crêpe Crème Pistache", price: 15, desc: "" },
-    { name: "Gaufre / Crêpe Bolivar", price: 16, desc: "" },
-    { name: "Supplément Fruits de saison", price: 2, desc: "" },
-    { name: "Supplément Fruits secs", price: 3, desc: "" }
-  ]},
-  { category: "Mini Pancakes", image: "", items: [
-    { name: "Miel", price: 10, desc: "" },
-    { name: "Chocolat", price: 10, desc: "" },
-    { name: "Nutella", price: 12, desc: "" },
-    { name: "Spéculoos", price: 12, desc: "" },
-    { name: "El Mordjene", price: 12, desc: "" }
-  ]},
-  { category: "Crêpes & Gaufres Salées", image: "", items: [
-    { name: "Gaufre / Crêpe Fromagère", price: 10, desc: "" },
-    { name: "Gaufre / Crêpe Jambon - Fromage", price: 11, desc: "" },
-    { name: "Gaufre / Crêpe Thon - Fromage", price: 12, desc: "" },
-    { name: "Gaufre / Crêpe Tunisienne", price: 13, desc: "Thon, mozzarella, harissa, oeuf" },
-    { name: "Gaufre / Crêpe Mixte", price: 14, desc: "Jambon, mozzarella" }
-  ]},
-  { category: "Omelettes", image: "", items: [
-    { name: "Omelette Fromagère", price: 9, desc: "" },
-    { name: "Omelette Jambon - Fromage", price: 10, desc: "" },
-    { name: "Omelette Champignon - Fromage", price: 10, desc: "" },
-    { name: "Omelette Thon - Fromage", price: 12, desc: "" },
-    { name: "Omelette Bolivar", price: 14, desc: "Thon, jambon, champignon, fromage" }
-  ]},
-  { category: "Libanais", image: "", items: [
-    { name: "Libanais Jambon - Fromage - Frites", price: 10, desc: "" },
-    { name: "Libanais Thon - Fromage - Frites", price: 11, desc: "" },
-    { name: "Libanais Escalope - Fromage - Frites", price: 12, desc: "" }
-  ]},
-  { category: "Paninis", image: "", items: [
-    { name: "Panini Jambon - Fromage - Frites", price: 9, desc: "" },
-    { name: "Panini Thon - Fromage - Frites", price: 10, desc: "" },
-    { name: "Panini Escalope - Fromage - Frites", price: 11, desc: "" }
-  ]},
-  { category: "Burgers", image: "", items: [
-    { name: "Crispy Chicken Burger", price: 12, desc: "Poulet crispy, fromage cheddar, oignon caramélisé, laitue, tomate, sauce burger, cornichons" },
-    { name: "Cheese Burger", price: 14, desc: "Steak haché, fromage cheddar, oignon caramélisé, laitue, tomate, sauce burger, cornichons" }
-  ]},
-  { category: "Club Sandwich", image: "", items: [
-    { name: "Club Jambon", price: 8, desc: "Jambon fumé, fromage, laitue, tomate" },
-    { name: "Club Thon", price: 8, desc: "Thon, fromage, laitue, tomate" }
-  ]},
-  { category: "Salades", image: "", items: [
-    { name: "Salade Niçoise", price: 10, desc: "Thon, oeuf, olives, laitue, tomate, oignon" },
-    { name: "Salade César", price: 12, desc: "Poulet, fromage, laitue, tomate cerise, croûtons" }
-  ]},
-  { category: "Nos Plats", image: "", items: [
-    { name: "Escalope Grillée", price: 16, desc: "" },
-    { name: "Escalope Panée", price: 17, desc: "" },
-    { name: "Escalope Cordon Bleu", price: 18, desc: "" },
-    { name: "Escalope Sauce Champignon", price: 19, desc: "" },
-    { name: "Menu Enfant", price: 11, desc: "Nuggets, frites, soda" }
-  ]},
-  { category: "Nos Pâtes", image: "", items: [
-    { name: "Penne Carbonara", price: 14, desc: "" },
-    { name: "Penne Puttanesca", price: 15, desc: "" },
-    { name: "Penne Escalope Champignon", price: 17, desc: "" },
-    { name: "Penne 4 Fromages", price: 18, desc: "" }
-  ]},
-  { category: "Nos Desserts", image: "", items: [
-    { name: "Brownies au Chocolat", price: 6, desc: "" },
-    { name: "Salade de Fruits", price: 8, desc: "" },
-    { name: "Fondant", price: 10, desc: "" },
-    { name: "Cheesecake", price: 12, desc: "Nutella, Spéculoos, Oreo, Caramel" },
-    { name: "Jwjem", price: 12, desc: "" }
-  ]},
-  { category: "Chichas", image: "", items: [
-    { name: "Chicha Fakher", price: 10, desc: "Pomme, menthe, raisin, chewing-gum" },
-    { name: "Chicha Adalya", price: 12, desc: "Love, MI Amor, Sheikh Money" },
-    { name: "Supplément Glaçons", price: 3, desc: "" }
-  ]},
-  { category: "Jeux", image: "", items: [
-    { name: "Jeux de cartes", price: 5, desc: "" }
-  ]}
-];
+/*
+  Bolivar — page script (plain JavaScript, no libraries)
 
-const CATEGORY_PLACEHOLDERS = {
-  "Petit Déjeuner": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=800&q=80",
-  "Nos Cafés": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80",
-  "Les Thés": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
-  "Chocolat Chaud / Glacé": "https://images.unsplash.com/photo-1517578239113-b03992dcdd25?w=800&q=80",
-  "Boissons Fraiches": "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=800&q=80",
-  "Ice Coffees": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80",
-  "Jus et Cocktails": "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=800&q=80",
-  "Smoothies": "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800&q=80",
-  "Mojitos": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=800&q=80",
-  "Milkshakes": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&q=80",
-  "Frappuccinos": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&q=80",
-  "Crêpes & Gaufres Sucrées": "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=800&q=80",
-  "Mini Pancakes": "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?w=800&q=80",
-  "Crêpes & Gaufres Salées": "https://images.unsplash.com/photo-1577953589629-446f28f0d8c1?w=800&q=80",
-  "Omelettes": "https://images.unsplash.com/photo-1510693206972-df098062cb71?w=800&q=80",
-  "Libanais": "https://images.unsplash.com/photo-1743674453093-592bed88018e?w=800&q=80",
-  "Paninis": "https://images.unsplash.com/photo-1655279562015-047c3da9a271?w=800&q=80",
-  "Burgers": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
-  "Club Sandwich": "https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=800&q=80",
-  "Salades": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
-  "Nos Plats": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
-  "Nos Pâtes": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&q=80",
-  "Nos Desserts": "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80",
-  "Chichas": "https://images.unsplash.com/photo-1635547821500-77542481940c?w=800&q=80",
-  "Jeux": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=800&q=80"
+  - The menu comes from Supabase when supabase-config.js is filled in (what the owner edits on
+    admin.html). The last menu loaded is kept on the phone, so the page still works if Supabase
+    is unreachable; an older copy on screen carries a "could not be updated" note.
+    Without Supabase, or before it has ever answered: the built-in copy in menu-data.js.
+  - The footer's hours, address, Maps link and phone come from the "Infos" tab of admin.html;
+    until they are loaded, the footer keeps the text written in index.html.
+
+  Loaded before this file: menu-data.js (MENU_DATA, CATEGORY_PLACEHOLDERS), supabase-config.js.
+*/
+
+const MENU_CACHE_KEY = "bolivar-menu-v1";
+const INFO_CACHE_KEY = "bolivar-info-v1";
+const FALLBACK_AFTER_MS = 6000; // Supabase slower than this: show the built-in menu meanwhile…
+const DB_TIMEOUT_MS = 30000;    // …and keep waiting this long for the real one
+const DB_READY = typeof SUPABASE_URL === "string" && SUPABASE_URL !== "" &&
+  typeof SUPABASE_KEY === "string" && SUPABASE_KEY !== "";
+const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80";
+
+// The menu on screen, whatever its source:
+//   [{ id, name, image, items: [{ id, name, price, desc, image, available }] }]
+let menu = null;
+let shownJson = null; // the Supabase or saved menu on screen, to redraw only when it changed
+let firstRender = true;
+const openCategories = new Set(); // categories the customer opened, kept open after a redraw
+let scrollSpy = null;
+
+// localStorage can be blocked (private browsing, strict settings): never let that break the page
+const storage = {
+  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(key, value); } catch { /* ignore */ } },
+  remove(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } }
 };
 
 function slugify(text) {
@@ -225,83 +42,259 @@ function formatPrice(price) {
   return `${Number(price).toFixed(2)} DT`;
 }
 
-function getCategoryImage(block) {
-  if (block.image && block.image.trim() !== "") return block.image;
-  return CATEGORY_PLACEHOLDERS[block.category] ||
-    "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80";
+// Build an element; text is always inserted as text, never as HTML
+// (names and descriptions come from the database, typed on the admin page)
+function el(tag, props, ...children) {
+  const node = document.createElement(tag);
+  for (const key in props) {
+    if (key === "attrs") for (const name in props.attrs) node.setAttribute(name, props.attrs[name]);
+    else if (key === "dataset") Object.assign(node.dataset, props.dataset);
+    else node[key] = props[key];
+  }
+  node.append(...children.filter((child) => child !== null && child !== undefined));
+  return node;
 }
+
+function getCategoryImage(category) {
+  return category.image || DEFAULT_CATEGORY_IMAGE;
+}
+
+// Photos uploaded on the admin page have a small copy next to them ("-800." → "-480.")
+function smallPhoto(url) {
+  return url && url.includes("-800.") ? url.replace("-800.", "-480.") : url;
+}
+
+/* ---------- Menu data ---------- */
+
+function fromMenuData(data) {
+  return data.map((block) => ({
+    id: slugify(block.category),
+    name: block.category,
+    image: block.image && block.image.trim() !== "" ? block.image : CATEGORY_PLACEHOLDERS[block.category] || null,
+    items: block.items.map((item) => ({
+      id: slugify(block.category) + "/" + slugify(item.name),
+      name: item.name,
+      price: item.price,
+      desc: item.desc || "",
+      image: null,
+      available: true
+    }))
+  }));
+}
+
+function fromDatabase(rows) {
+  return rows.map((category) => ({
+    id: category.id,
+    name: category.name_fr,
+    image: category.image_url || CATEGORY_PLACEHOLDERS[category.name_fr] || null,
+    items: (category.items || []).map((item) => ({
+      id: item.id,
+      name: item.name_fr,
+      price: Number(item.price),
+      desc: item.description_fr || "",
+      image: item.image_url || null,
+      available: item.available !== false
+    }))
+  }));
+}
+
+// A usable menu: at least one product, and every part in the expected shape
+function isMenu(data) {
+  return Array.isArray(data) &&
+    data.some((category) => category && Array.isArray(category.items) && category.items.length > 0) &&
+    data.every((category) => category && typeof category.id === "string" && typeof category.name === "string" &&
+      Array.isArray(category.items) &&
+      category.items.every((item) => item && typeof item.id === "string" && typeof item.name === "string" &&
+        typeof item.price === "number" && Number.isFinite(item.price)));
+}
+
+async function fetchMenuFromDatabase() {
+  const columns = "id,name_fr,image_url,position,items(id,name_fr,description_fr,price,image_url,available,position)";
+  const url = SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/categories?select=" + encodeURIComponent(columns) +
+    "&order=position.asc&items.order=position.asc";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DB_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { headers: { apikey: SUPABASE_KEY }, signal: controller.signal, cache: "no-store" });
+    if (!response.ok) throw new Error("Supabase answered " + response.status);
+    const rows = await response.json();
+    const data = Array.isArray(rows) ? fromDatabase(rows) : [];
+    // An empty answer is a fault (rules or data), never a real menu: keep what we have
+    if (!isMenu(data)) throw new Error("Supabase sent no menu");
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// The copy saved on this phone; a damaged one is thrown away (it would never be replaced otherwise)
+function readCachedMenu() {
+  let data;
+  try { data = JSON.parse(storage.get(MENU_CACHE_KEY) || "null"); } catch { data = undefined; } // damaged
+  if (data !== null && !isMenu(data)) {
+    storage.remove(MENU_CACHE_KEY);
+    return null;
+  }
+  return data;
+}
+
+async function loadMenu() {
+  if (!DB_READY) {
+    showMenu(fromMenuData(MENU_DATA));
+    return;
+  }
+  // Show the copy saved on this phone straight away, then refresh it from Supabase
+  const cached = readCachedMenu();
+  if (cached) {
+    try {
+      showMenu(cached);
+      shownJson = JSON.stringify(cached);
+    } catch (error) {
+      console.warn("The saved menu could not be shown and was thrown away:", error);
+      storage.remove(MENU_CACHE_KEY);
+      menu = null;
+    }
+  }
+  if (!menu) showLoading();
+  // Supabase is slow: show the built-in menu meanwhile; the real one replaces it when it arrives
+  const slow = setTimeout(() => {
+    if (menu) return;
+    showMenu(fromMenuData(MENU_DATA));
+    setStale(true);
+  }, FALLBACK_AFTER_MS);
+  await refreshMenu();
+  clearTimeout(slow);
+}
+
+async function refreshMenu() {
+  try {
+    const fresh = await fetchMenuFromDatabase();
+    const json = JSON.stringify(fresh);
+    if (json !== shownJson) {
+      showMenu(fresh);
+      shownJson = json;
+      storage.set(MENU_CACHE_KEY, json); // saved only once it was shown without a problem
+    }
+    setStale(false);
+  } catch (error) {
+    console.warn("Could not load the menu from Supabase:", error);
+    if (!menu) showMenu(fromMenuData(MENU_DATA)); // nothing better available
+    setStale(true);
+    window.addEventListener("online", refreshMenu, { once: true }); // try again when the phone is back online
+  }
+}
+
+// "The menu could not be updated" note, while an older copy is on screen
+function setStale(isStale) {
+  document.getElementById("menuStale").hidden = !isStale;
+}
+
+function showLoading() {
+  document.getElementById("menuContainer").replaceChildren(
+    el("p", { className: "menu-loading" }, "Chargement de la carte…"));
+}
+
+function showMenu(data) {
+  // Empty categories are not shown
+  menu = data.filter((category) => category.items.length > 0);
+  renderNavbar();
+  renderMenu();
+  setupScrollSpy();
+  applySearch();
+  if (firstRender) {
+    firstRender = false;
+    jumpToSharedLink();
+  }
+}
+
+/* ---------- Menu ---------- */
 
 function renderNavbar() {
   const nav = document.getElementById("categoryNav");
   if (!nav) return;
-  nav.innerHTML = MENU_DATA.map((block) => {
-    const id = slugify(block.category);
-    return `<a class="nav-pill" href="#${id}">${block.category}</a>`;
-  }).join("");
+  nav.replaceChildren(...menu.map((category) =>
+    el("a", { className: "nav-pill", href: `#${category.id}` }, category.name)));
+}
+
+function renderItem(item) {
+  return el("div", { className: "menu-item" + (item.available ? "" : " is-unavailable") },
+    item.image ? el("img", {
+      className: "menu-item-photo", alt: "", width: 48, height: 48,
+      loading: "lazy", decoding: "async", src: smallPhoto(item.image)
+    }) : null,
+    el("div", { className: "menu-item-left" },
+      el("h4", {}, item.name),
+      item.available ? null : el("span", { className: "item-badge" }, "Indisponible"),
+      item.desc ? el("div", { className: "menu-item-desc" }, item.desc) : null),
+    el("span", { className: "item-price" }, formatPrice(item.price)));
+}
+
+function renderCategory(category) {
+  const open = openCategories.has(category.id);
+  return el("article", { className: "menu-category", id: category.id },
+    el("button", {
+      className: "category-toggle",
+      dataset: { target: `${category.id}-items`, category: category.id },
+      attrs: { "aria-expanded": String(open) }
+    },
+      el("img", { className: "category-bg", alt: "", loading: "lazy", src: getCategoryImage(category) }),
+      el("div", { className: "category-overlay" }),
+      el("div", { className: "category-toggle-inner" },
+        el("h3", {}, category.name),
+        el("span", { className: "toggle-arrow" + (open ? " open" : "") }, "▼"))),
+    el("div", { className: "category-items" + (open ? "" : " collapsed"), id: `${category.id}-items` },
+      el("div", { className: "menu-list" }, ...category.items.map(renderItem))));
 }
 
 function renderMenu() {
   const menuContainer = document.getElementById("menuContainer");
   if (!menuContainer) return;
+  menuContainer.replaceChildren(...menu.map(renderCategory));
+}
 
-  menuContainer.innerHTML = MENU_DATA.map((block) => {
-    const id = slugify(block.category);
-    const imgSrc = getCategoryImage(block);
+function setupMenuClicks() {
+  const menuContainer = document.getElementById("menuContainer");
+  if (!menuContainer) return;
 
-    return `
-      <article class="menu-category" id="${id}">
-        <button class="category-toggle" data-target="${id}-items" aria-expanded="false">
-          <img class="category-bg" src="${imgSrc}" alt="${block.category}" loading="lazy" />
-          <div class="category-overlay"></div>
-          <div class="category-toggle-inner">
-            <h3>${block.category}</h3>
-            <span class="toggle-arrow">▼</span>
-          </div>
-        </button>
-        <div class="category-items collapsed" id="${id}-items">
-          <div class="menu-list">
-            ${block.items.map((item) => `
-              <div class="menu-item">
-                <div class="menu-item-left">
-                  <h4>${item.name}</h4>
-                  ${item.desc ? `<div class="menu-item-desc">${item.desc}</div>` : ""}
-                </div>
-                <span class="item-price">${formatPrice(item.price)}</span>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  menuContainer.querySelectorAll(".category-toggle").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const targetId = btn.dataset.target;
-      const items = document.getElementById(targetId);
+  menuContainer.addEventListener("click", (event) => {
+    const btn = event.target.closest(".category-toggle");
+    if (btn) {
+      const items = document.getElementById(btn.dataset.target);
       const arrow = btn.querySelector(".toggle-arrow");
       const isOpen = !items.classList.contains("collapsed");
       items.classList.toggle("collapsed", isOpen);
       arrow.classList.toggle("open", !isOpen);
       btn.setAttribute("aria-expanded", String(!isOpen));
-    });
-  });
+      if (isOpen) openCategories.delete(btn.dataset.category);
+      else openCategories.add(btn.dataset.category);
+      return;
+    }
 
-  menuContainer.querySelectorAll(".menu-item").forEach((item) => {
-    item.addEventListener("click", () => {
+    const item = event.target.closest(".menu-item");
+    if (item) {
       const isExpanded = item.classList.contains("expanded");
       const siblings = item.closest(".menu-list").querySelectorAll(".menu-item");
       siblings.forEach((s) => s.classList.remove("expanded"));
       if (!isExpanded) item.classList.add("expanded");
-    });
+    }
   });
 }
 
+// A shared link like "#nos-cafes": the category did not exist yet when the browser read it
+function jumpToSharedLink() {
+  let id = "";
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; } // e.g. "#%E0"
+  if (!id || !menu.some((category) => category.id === id)) return;
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ behavior: "instant" });
+}
+
 function setupScrollSpy() {
+  if (scrollSpy) scrollSpy.disconnect(); // the menu was redrawn
   const pills = document.querySelectorAll(".nav-pill");
   const categories = document.querySelectorAll(".menu-category");
 
-  const observer = new IntersectionObserver((entries) => {
+  scrollSpy = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const id = entry.target.id;
@@ -312,7 +305,7 @@ function setupScrollSpy() {
     });
   }, { rootMargin: "-40% 0px -55% 0px" });
 
-  categories.forEach((cat) => observer.observe(cat));
+  categories.forEach((cat) => scrollSpy.observe(cat));
 }
 
 function setupStickyHeader() {
@@ -359,61 +352,171 @@ function setupStickyHeader() {
   refresh();
 }
 
+/* ---------- Footer details ("Infos" tab of admin.html) ---------- */
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Same rules as the admin page: only Google Maps links, and phone numbers made of digits
+const MAPS_LINK = /^https:\/\/((www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}|maps\.app\.goo\.gl|goo\.gl\/maps)\//i;
+const PHONE = /^\+?[0-9][0-9 .-]{5,18}$/;
+
+let info = {}; // the café's details (Supabase table "settings"): key -> value
+
+function hasInfo(key) {
+  return typeof info[key] === "string";
+}
+function infoText(key, maxLength) {
+  return hasInfo(key) ? info[key].trim().slice(0, maxLength) : "";
+}
+
+// "Lun-Dim, 07:00 - 23:00", or "Lun-Ven, 07:00 - 23:00 · Sam-Dim, 09:00 - 00:00"
+function openingHours() {
+  const span = (days) => {
+    const open = infoText("hours_" + days + "_open", 5);
+    const close = infoText("hours_" + days + "_close", 5);
+    return TIME.test(open) && TIME.test(close) ? open + " - " + close : null;
+  };
+  const week = span("week");
+  const weekend = span("weekend");
+  if (week && week === weekend) return "Lun-Dim, " + week;
+  return [week && "Lun-Ven, " + week, weekend && "Sam-Dim, " + weekend].filter(Boolean).join(" · ");
+}
+
+// Footer rows are "<i icon></i> text": keep the icon, replace the text
+function setRowText(node, text) {
+  node.replaceChildren(node.querySelector("i"), " " + text);
+}
+
+// A detail never saved on the admin page keeps the footer's own text; one saved empty
+// (or not valid) hides its row
+function renderInfo() {
+  const hoursKeys = ["hours_week_open", "hours_week_close", "hours_weekend_open", "hours_weekend_close"];
+  if (hoursKeys.some(hasInfo)) {
+    const hours = openingHours();
+    const row = document.getElementById("footerHours");
+    row.closest("li").hidden = !hours;
+    if (hours) setRowText(row, hours);
+  }
+
+  const mapsUrl = infoText("maps_url", 300);
+  if (MAPS_LINK.test(mapsUrl)) {
+    document.querySelectorAll("[data-maps]").forEach((link) => { link.href = mapsUrl; });
+  }
+
+  if (hasInfo("address")) {
+    const address = infoText("address", 120);
+    const row = document.getElementById("footerAddress");
+    row.closest("li").hidden = !address;
+    if (address) setRowText(row, address);
+  }
+
+  if (hasInfo("phone")) {
+    const phone = infoText("phone", 20);
+    const link = document.getElementById("footerPhone");
+    link.closest("li").hidden = !PHONE.test(phone);
+    if (PHONE.test(phone)) {
+      link.href = "tel:" + phone.replace(/[^+0-9]/g, "");
+      setRowText(link, phone);
+    }
+  }
+}
+
+// The details saved on this phone first, then the latest from Supabase (same idea as the menu)
+async function loadInfo() {
+  if (!DB_READY) return;
+  try {
+    const saved = JSON.parse(storage.get(INFO_CACHE_KEY) || "null");
+    if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+      info = saved;
+      renderInfo();
+    }
+  } catch { /* a damaged saved copy is ignored; the fresh one replaces it */ }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DB_TIMEOUT_MS);
+  try {
+    const url = SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/settings?select=key,value";
+    const response = await fetch(url, { headers: { apikey: SUPABASE_KEY }, signal: controller.signal, cache: "no-store" });
+    if (!response.ok) throw new Error("Supabase answered " + response.status); // 404: the table is not there yet
+    const rows = await response.json();
+    if (!Array.isArray(rows)) throw new Error("Supabase sent no details");
+    info = Object.fromEntries(rows.filter((row) => row && typeof row.key === "string" && typeof row.value === "string")
+      .map((row) => [row.key, row.value]));
+    storage.set(INFO_CACHE_KEY, JSON.stringify(info));
+    renderInfo();
+  } catch (error) {
+    console.warn("Could not load the café details from Supabase:", error);
+    window.addEventListener("online", loadInfo, { once: true });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* ---------- Start ---------- */
+
 function init() {
-  renderNavbar();
-  renderMenu();
-  setupScrollSpy();
+  if (typeof MENU_DATA === "undefined") {
+    console.error("menu-data.js did not load.");
+    return;
+  }
+  setupMenuClicks();
   setupSearch();
   setupStickyHeader();
+  loadMenu();
+  loadInfo();
 }
+
+function applySearch() {
+  const input = document.getElementById("searchInput");
+  if (!input) return;
+  const query = input.value.trim().toLowerCase();
+
+  if (!query) {
+    document.querySelectorAll(".menu-category").forEach(el => el.style.display = "");
+    document.querySelectorAll(".menu-item").forEach(el => el.style.display = "");
+    const noResults = document.getElementById("noResults");
+    if (noResults) noResults.style.display = "none";
+    return;
+  }
+
+  let anyVisible = false;
+
+  document.querySelectorAll(".menu-category").forEach((catEl) => {
+    let catHasMatch = false;
+
+    catEl.querySelectorAll(".menu-item").forEach((itemEl) => {
+      const name = itemEl.querySelector("h4")?.textContent.toLowerCase() || "";
+      const desc = itemEl.querySelector(".menu-item-desc")?.textContent.toLowerCase() || "";
+      const matches = name.includes(query) || desc.includes(query);
+      itemEl.style.display = matches ? "" : "none";
+      if (matches) catHasMatch = true;
+    });
+
+    catEl.style.display = catHasMatch ? "" : "none";
+
+    if (catHasMatch) {
+      anyVisible = true;
+      const itemsContainer = catEl.querySelector(".category-items");
+      const arrow = catEl.querySelector(".toggle-arrow");
+      if (itemsContainer) itemsContainer.classList.remove("collapsed");
+      if (arrow) arrow.classList.add("open");
+    }
+  });
+
+  let noResults = document.getElementById("noResults");
+  if (!noResults) {
+    noResults = document.createElement("p");
+    noResults.id = "noResults";
+    noResults.className = "no-results";
+    noResults.textContent = "Aucun résultat trouvé.";
+    document.getElementById("menuContainer").appendChild(noResults);
+  }
+  noResults.style.display = anyVisible ? "none" : "block";
+}
+
 function setupSearch() {
   const input = document.getElementById("searchInput");
   if (!input) return;
-
-  input.addEventListener("input", () => {
-    const query = input.value.trim().toLowerCase();
-
-    if (!query) {
-      document.querySelectorAll(".menu-category").forEach(el => el.style.display = "");
-      document.querySelectorAll(".menu-item").forEach(el => el.style.display = "");
-      const noResults = document.getElementById("noResults");
-      if (noResults) noResults.style.display = "none";
-      return;
-    }
-
-    let anyVisible = false;
-
-    document.querySelectorAll(".menu-category").forEach((catEl) => {
-      let catHasMatch = false;
-
-      catEl.querySelectorAll(".menu-item").forEach((itemEl) => {
-        const name = itemEl.querySelector("h4")?.textContent.toLowerCase() || "";
-        const desc = itemEl.querySelector(".menu-item-desc")?.textContent.toLowerCase() || "";
-        const matches = name.includes(query) || desc.includes(query);
-        itemEl.style.display = matches ? "" : "none";
-        if (matches) catHasMatch = true;
-      });
-
-      catEl.style.display = catHasMatch ? "" : "none";
-
-      if (catHasMatch) {
-        anyVisible = true;
-        const itemsContainer = catEl.querySelector(".category-items");
-        const arrow = catEl.querySelector(".toggle-arrow");
-        if (itemsContainer) itemsContainer.classList.remove("collapsed");
-        if (arrow) arrow.classList.add("open");
-      }
-    });
-
-    let noResults = document.getElementById("noResults");
-    if (!noResults) {
-      noResults = document.createElement("p");
-      noResults.id = "noResults";
-      noResults.className = "no-results";
-      noResults.textContent = "Aucun résultat trouvé.";
-      document.getElementById("menuContainer").appendChild(noResults);
-    }
-    noResults.style.display = anyVisible ? "none" : "block";
-  });
+  // Also run after every redraw (applySearch in showMenu), so a fresh menu keeps the filter
+  input.addEventListener("input", applySearch);
 }
 document.addEventListener("DOMContentLoaded", init);
