@@ -2,51 +2,55 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Bolivar | Coffee & Lounge</title>
+  <meta name="theme-color" content="#1e2a3a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 </head>
 <body>
+  <!-- ============ HEADER: ☰ menu, logo, search, FR / EN ============ -->
   <header class="site-header" id="siteHeader">
-    <div class="site-header-inner">
-      <a class="site-header-brand" href="#top">
-        <img src="logo.png" alt="Bolivar" class="site-header-logo" />
-        <span class="site-header-name">Bolivar</span>
+    <div class="header-start">
+      <button class="header-menu" type="button" id="sideMenuOpen" aria-haspopup="dialog" aria-controls="sideMenu"
+              data-i18n-attr="aria-label:side.open" aria-label="Ouvrir le menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <a class="brand" href="#top" data-i18n-attr="aria-label:brand.home" aria-label="Bolivar, retour en haut de la page">
+        <img src="logo.png" alt="" width="34" height="34" />
+        <span class="brand-name">Bolivar</span>
       </a>
-      <nav class="site-header-nav">
-        <a href="#menu" class="site-header-link">Voir menu</a>
-      </nav>
-      <div class="search-bar">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input type="text" id="searchInput" placeholder="Rechercher un article..." />
+    </div>
+    <div class="header-actions">
+      <button class="header-search" type="button" id="searchOpen" aria-haspopup="dialog" aria-controls="searchDialog"
+              data-i18n-attr="aria-label:search.open" aria-label="Rechercher dans la carte">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15.5 15.5L20 20"/></svg>
+      </button>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.group" aria-label="Langue">
+        <button type="button" data-lang="fr" lang="fr" aria-pressed="true" title="Français">FR</button>
+        <button type="button" data-lang="en" lang="en" aria-pressed="false" title="English">EN</button>
       </div>
     </div>
   </header>
 
-  <header class="hero" id="top">
-    <div class="hero-card">
-      <img src="logo.png" alt="Bolivar Coffee & Lounge" class="hero-logo" />
-      <h1>Bolivar</h1>
-      <p class="eyebrow">Coffee & Lounge</p>
-      
-    </div>
-  </header>
+  <section class="hero" id="top" aria-labelledby="heroTitle">
+    <img class="hero-logo" src="logo.png" alt="" width="120" height="120" />
+    <h1 class="hero-title" id="heroTitle"><span class="hero-name">Bolivar</span> <span class="hero-sub">Coffee &amp; Lounge</span></h1>
+  </section>
 
-
-  <nav class="category-nav">
+  <nav class="category-nav" data-i18n-attr="aria-label:menu.categories" aria-label="Catégories de la carte">
     <div id="categoryNav" class="nav-pills"></div>
   </nav>
 
   <main class="container">
     <section class="section" id="menu">
-      <p class="menu-stale" id="menuStale" role="status" hidden>La carte n'a pas pu être mise à jour : certains prix ont peut-être changé.</p>
+      <p class="menu-stale" id="menuStale" role="status" hidden data-i18n="menu.stale">La carte n'a pas pu être mise à jour : certains prix ont peut-être changé.</p>
       <div id="menuContainer"></div>
-      <noscript><p class="menu-loading">Activez JavaScript pour afficher la carte.</p></noscript>
+      <noscript><p class="menu-loading">Activez JavaScript pour afficher la carte. / Please turn on JavaScript to see the menu.</p></noscript>
     </section>
   </main>
 
@@ -57,20 +61,20 @@
         <img src="logo.png" alt="Bolivar Coffee & Lounge" class="site-footer-logo" />
         <h3 class="site-footer-name">Bolivar</h3>
         <p class="site-footer-tagline">Coffee & Lounge</p>
-        <p class="site-footer-desc">Votre pause café, gourmandise et détente au cœur de Tunis.</p>
+        <p class="site-footer-desc" data-i18n="footer.desc">Votre pause café, gourmandise et détente au cœur de Tunis.</p>
       </div>
 
       <div class="site-footer-grid">
         <div class="site-footer-col">
-          <h4>Navigation</h4>
+          <h4 data-i18n="footer.nav">Navigation</h4>
           <ul>
-            <li><a href="#top">Accueil</a></li>
-            <li><a href="#menu">Menu</a></li>
+            <li><a href="#top" data-i18n="footer.home">Accueil</a></li>
+            <li><a href="#menu" data-i18n="footer.menu">Menu</a></li>
           </ul>
         </div>
 
         <div class="site-footer-col">
-          <h4>Contact</h4>
+          <h4 data-i18n="footer.contact">Contact</h4>
           <ul>
             <!-- Phone, address, Maps link and hours: replaced by the "Infos" tab of admin.html once saved there -->
             <li>
@@ -88,16 +92,16 @@
             </li>
             <li>
               <a href="https://search.google.com/local/writereview?placeid=ChIJUdJMBQA3_RIRrn223m53Eow" target="_blank" rel="noopener">
-                <i class="fa-solid fa-star"></i> Laisser un avis
+                <i class="fa-solid fa-star"></i> <span data-i18n="footer.review">Laisser un avis</span>
               </a>
             </li>
           </ul>
         </div>
 
         <div class="site-footer-col">
-          <h4>Suivez-nous</h4>
+          <h4 data-i18n="footer.follow">Suivez-nous</h4>
           <div class="site-footer-socials">
-            <a href="https://www.instagram.com/bolivar_coffeee/" target="_blank" rel="noopener" aria-label="Instagram">
+            <a href="https://www.instagram.com/bolivar_coffeee/" target="_blank" rel="noopener" aria-label="Instagram" id="instagramLink">
               <i class="fa-brands fa-instagram"></i>
             </a>
             <a href="https://www.facebook.com/p/Bolivar-Coffee-61574949567827/" target="_blank" rel="noopener" aria-label="Facebook">
@@ -113,14 +117,81 @@
       <div class="site-footer-divider"></div>
 
       <div class="site-footer-bottom">
-        <p>&copy; 2026 Bolivar Coffee & Lounge. Tous droits réservés. Réalisé par Youssef Maazaoui</p>
-        <a href="#top" class="site-footer-top">Retour en haut <i class="fa-solid fa-arrow-up"></i></a>
+        <p>&copy; 2026 Bolivar Coffee & Lounge. <span data-i18n="footer.rights">Tous droits réservés. Réalisé par Youssef Maazaoui</span></p>
+        <a href="#top" class="site-footer-top"><span data-i18n="footer.top">Retour en haut</span> <i class="fa-solid fa-arrow-up"></i></a>
       </div>
 
     </div>
   </footer>
 
+  <!-- ============ SEARCH (opened by the magnifier in the header) ============ -->
+  <dialog class="search-sheet" id="searchDialog" aria-labelledby="searchTitle">
+    <div class="search-inner">
+      <h2 class="visually-hidden" id="searchTitle" data-i18n="search.title">Rechercher dans la carte</h2>
+      <div class="search-bar">
+        <label class="search-field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15.5 15.5L20 20"/></svg>
+          <span class="visually-hidden" data-i18n="search.label">Rechercher un produit</span>
+          <input type="search" id="searchInput" autocomplete="off" spellcheck="false" enterkeyhint="search"
+                 data-i18n-attr="placeholder:search.placeholder" placeholder="Ex. capucin, nutella, mojito…" />
+        </label>
+        <button class="icon-btn" type="button" id="searchClose" data-i18n-attr="aria-label:search.close" aria-label="Fermer la recherche">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="search-status" id="searchStatus" role="status" aria-live="polite"></p>
+      <ul class="search-results" id="searchResults"></ul>
+    </div>
+  </dialog>
+
+  <!-- ============ ☰ MENU: opening hours, Wi-Fi, contact (from the admin's "Infos" tab) ============ -->
+  <!-- A section or row is shown only once it has information; Instagram is always known -->
+  <dialog class="side-menu" id="sideMenu" aria-labelledby="sideMenuTitle">
+    <div class="side-inner">
+      <div class="side-head">
+        <h2 id="sideMenuTitle" data-i18n="side.title">Menu</h2>
+        <button class="icon-btn" type="button" id="sideMenuClose" data-i18n-attr="aria-label:side.close" aria-label="Fermer le menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <section class="side-card" id="sideHours" aria-labelledby="hoursTitle" hidden>
+        <h3 id="hoursTitle">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 7.5V12l3 2"/></svg>
+          <span data-i18n="hours.title">Horaires</span>
+        </h3>
+        <dl class="side-rows" id="hoursRows"></dl>
+      </section>
+
+      <section class="side-card" id="sideWifi" aria-labelledby="wifiTitle" hidden>
+        <h3 id="wifiTitle">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.5a8 8 0 0 1 11 0M9.5 15.5a4 4 0 0 1 5 0"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor"/></svg>
+          <span data-i18n="wifi.title">Wi-Fi</span>
+        </h3>
+        <dl class="side-rows">
+          <div><dt data-i18n="wifi.network">Réseau</dt><dd id="wifiName"></dd></div>
+          <div id="wifiPasswordRow"><dt data-i18n="wifi.password">Mot de passe</dt><dd class="wifi-password" id="wifiPassword"></dd></div>
+        </dl>
+        <button class="side-btn" type="button" id="wifiCopy" data-i18n="wifi.copy">Copier le mot de passe</button>
+        <p class="side-note wifi-status" id="wifiStatus" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="side-card" id="sideFind" aria-labelledby="findTitle">
+        <h3 id="findTitle">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span data-i18n="find.title">Nous trouver</span>
+        </h3>
+        <dl class="side-rows">
+          <div id="findAddressRow" hidden><dt data-i18n="find.address">Adresse</dt><dd><a id="findAddress" target="_blank" rel="noopener" data-maps></a></dd></div>
+          <div id="findPhoneRow" hidden><dt data-i18n="find.phone">Téléphone</dt><dd><a id="findPhone"></a></dd></div>
+          <div><dt>Instagram</dt><dd><a id="findInstagram" href="https://www.instagram.com/bolivar_coffeee/" target="_blank" rel="noopener"></a></dd></div>
+        </dl>
+      </section>
+    </div>
+  </dialog>
+
   <script src="menu-data.js"></script>
+  <script src="translations.js"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
 </body>

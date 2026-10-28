@@ -110,7 +110,7 @@
 
       <!-- ============ INFOS (shown in the footer of the website) ============ -->
       <div class="admin-panel" role="tabpanel" id="tab-info" aria-labelledby="tab-btn-info" hidden>
-        <p class="admin-muted admin-hint">Ces informations s'affichent en bas de page du site, dans « Contact ».
+        <p class="admin-muted admin-hint">Ces informations s'affichent dans le menu ☰ du site et en bas de page.
           Laissez vide ce qui ne s'applique pas : rien ne s'affiche à la place.</p>
         <p class="admin-note" id="info-missing" hidden>Les informations ne sont pas encore disponibles : la table
           « settings » manque dans Supabase. Exécutez le script SQL indiqué dans le README, puis rechargez la page.</p>
@@ -127,7 +127,20 @@
               <label class="field"><span>Ouverture</span><input type="time" name="hours_weekend_open"></label>
               <label class="field"><span>Fermeture</span><input type="time" name="hours_weekend_close"></label>
             </div>
-            <p class="admin-muted">Mêmes horaires sur les deux lignes : le site affiche « Lun-Dim ».</p>
+            <p class="admin-muted">Mêmes horaires sur les deux lignes : le site les affiche sur une seule ligne (« Tous les jours »).</p>
+          </fieldset>
+
+          <fieldset class="info-group">
+            <legend>Wi-Fi</legend>
+            <label class="field">
+              <span>Nom du réseau</span>
+              <input name="wifi_name" maxlength="60" autocomplete="off" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>Mot de passe</span>
+              <input name="wifi_password" maxlength="100" autocomplete="off" spellcheck="false" autocapitalize="off">
+            </label>
+            <p class="admin-muted">Le mot de passe est visible par tous sur le site, avec un bouton pour le copier.</p>
           </fieldset>
 
           <fieldset class="info-group">
@@ -174,8 +187,16 @@
           <input name="nameFr" maxlength="80" required autocomplete="off">
         </label>
         <label class="field">
+          <span>Nom en anglais</span>
+          <input name="nameEn" maxlength="80" placeholder="Vide = nom français" autocomplete="off">
+        </label>
+        <label class="field">
           <span>Description</span>
           <textarea name="descFr" maxlength="300" rows="2"></textarea>
+        </label>
+        <label class="field">
+          <span>Description en anglais</span>
+          <textarea name="descEn" maxlength="300" rows="2" placeholder="Vide = description française"></textarea>
         </label>
         <label class="field">
           <span>Prix (DT) *</span>
@@ -221,6 +242,10 @@
           <span>Nom *</span>
           <input name="nameFr" maxlength="60" required autocomplete="off" placeholder="ex. Crêpes">
         </label>
+        <label class="field">
+          <span>Nom en anglais</span>
+          <input name="nameEn" maxlength="60" placeholder="Vide = nom français" autocomplete="off">
+        </label>
 
         <div class="field">
           <span>Photo *</span>
@@ -258,8 +283,16 @@
           <input name="nameFr" maxlength="80" required autocomplete="off">
         </label>
         <label class="field">
+          <span>Nom en anglais</span>
+          <input name="nameEn" maxlength="80" placeholder="Vide = nom français" autocomplete="off">
+        </label>
+        <label class="field">
           <span>Description</span>
           <textarea name="descFr" maxlength="300" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>Description en anglais</span>
+          <textarea name="descEn" maxlength="300" rows="3" placeholder="Vide = description française"></textarea>
         </label>
 
         <div class="field">

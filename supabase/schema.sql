@@ -16,7 +16,7 @@
 create table if not exists public.categories (
   id         text primary key,                -- short name used in links, e.g. 'nos-cafes' → #nos-cafes
   name_fr    text not null check (char_length(name_fr) between 1 and 60),
-  name_en    text check (char_length(name_en) <= 60),   -- not shown on the site (French only)
+  name_en    text check (char_length(name_en) <= 60),   -- empty = use the French name
   image_url  text,                            -- banner photo (uploaded ones: 800 px, with a "-480." copy next to it)
   position   integer not null default 0,      -- order on the menu (1 = first)
   created_at timestamptz not null default now()
@@ -117,9 +117,10 @@ $$;
 revoke execute on function public.reorder_categories(text[]) from public, anon;
 grant execute on function public.reorder_categories(text[]) to authenticated;
 
--- ---------- The café's details (footer of the website) ----------
--- One row per detail, edited on the admin page ("Infos" tab): opening hours, address,
--- Google Maps link, phone. An empty value is simply not shown. Everyone can read them.
+-- ---------- The café's details (☰ menu and footer of the website) ----------
+-- One row per detail, edited on the admin page ("Infos" tab): opening hours, Wi-Fi, address,
+-- Google Maps link, phone. An empty value is simply not shown. Everyone can read them — the
+-- Wi-Fi password too, since the website shows it.
 
 create table if not exists public.settings (
   key        text primary key check (key ~ '^[a-z_]{1,40}$'),  -- e.g. 'phone', 'hours_week_open'

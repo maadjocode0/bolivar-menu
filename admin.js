@@ -4,12 +4,12 @@
   What it does
   - Log in / log out with Supabase Auth. Only accounts listed in the "admins" table can edit.
   - Products: add one (category, name, description, price, photo, available), change a price,
-    make an item available / unavailable, change its photo, edit its name and description or
-    remove its photo, delete it.
-  - Categories: add one (name and photo, placed at the end of the menu), change their order
-    by dragging (SortableJS) or with the arrows, change a photo.
-  - Infos: opening hours, address, Google Maps link and phone, shown in the footer of the
-    website (table public.settings).
+    make an item available / unavailable, change its photo, edit its name and description
+    (FR / EN) or remove its photo, delete it.
+  - Categories: add one (name FR / EN and photo, placed at the end of the menu), change their
+    order by dragging (SortableJS) or with the arrows, change a photo.
+  - Infos: opening hours, Wi-Fi, address, Google Maps link and phone, shown in the ☰ menu of
+    the website and in its footer (table public.settings).
 
   Security: the database rules in supabase/schema.sql decide who may change what.
   This page only offers the tools; it does not protect anything by itself.
@@ -644,6 +644,8 @@
     });
   }
 
+  // An English description is shown only next to a French one (French is the main language)
+  const EN_ONLY_DESCRIPTION = "Écrivez aussi la description en français : sans elle, la description anglaise n'est pas affichée.";
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.addEventListener('click', () => closeDialog(button.closest('dialog')));
   }
@@ -699,9 +701,11 @@
     const categoryId = form.category.value;
     const nameFr = form.nameFr.value.trim();
     const descFr = form.descFr.value.trim();
+    const descEn = form.descEn.value.trim();
     const price = parsePrice(form.price.value);
     if (!categoryId) return showFormError('Choisissez une catégorie.', form.category);
     if (!nameFr) return showFormError('Le nom est obligatoire.', form.nameFr);
+    if (descEn && !descFr) return showFormError(EN_ONLY_DESCRIPTION, form.descFr);
     if (price === null) return showFormError('Indiquez un prix valide, par exemple 15.50.', form.price);
     showFormError('');
 
@@ -718,7 +722,9 @@
         id,
         category_id: categoryId,
         name_fr: nameFr,
+        name_en: form.nameEn.value.trim() || null,
         description_fr: descFr || null,
+        description_en: descEn || null,
         price,
         image_url: imageUrl,
         available: form.available.checked,
@@ -787,6 +793,7 @@
     };
 
     const nameFr = categoryForm.nameFr.value.trim();
+    const nameEn = categoryForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
     if (!nameFr) return showFormError('Le nom est obligatoire.', categoryForm.nameFr);
     if (categories.some((category) => category.name_fr.toLowerCase() === nameFr.toLowerCase())) {
       return showFormError('Une catégorie porte déjà ce nom.', categoryForm.nameFr);
@@ -807,7 +814,7 @@
       imageUrl = await uploadPhotos('categories', id, newCategoryPhoto);
       const position = Math.max(0, ...categories.map((category) => category.position)) + 1;
       const { data, error } = await db.from('categories')
-        .insert({ id, name_fr: nameFr, image_url: imageUrl, position })
+        .insert({ id, name_fr: nameFr, name_en: nameEn, image_url: imageUrl, position })
         .select().single();
       if (error) throw error;
       categories.push(data);
@@ -832,7 +839,7 @@
 
   // One row of public.settings each, in the order of the form; an empty value is not shown
   const INFO_KEYS = ['hours_week_open', 'hours_week_close', 'hours_weekend_open', 'hours_weekend_close',
-    'address', 'maps_url', 'phone'];
+    'wifi_name', 'wifi_password', 'address', 'maps_url', 'phone'];
   const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
   // Same rule on the website: only Google Maps links are used there
   const MAPS_LINK = /^https:\/\/((www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}|maps\.app\.goo\.gl|goo\.gl\/maps)\//i;
@@ -864,6 +871,7 @@
       if (values[open] && !TIME.test(values[open])) return refuse('Heure invalide : écrivez-la par exemple 07:00.', open);
       if (values[close] && !TIME.test(values[close])) return refuse('Heure invalide : écrivez-la par exemple 23:00.', close);
     }
+    if (values.wifi_password && !values.wifi_name) return refuse('Indiquez aussi le nom du réseau Wi-Fi.', 'wifi_name');
     if (values.maps_url && !MAPS_LINK.test(values.maps_url)) {
       return refuse('Collez le lien de partage Google Maps (il commence par https://maps.app.goo.gl/ ou https://www.google.com/maps/).', 'maps_url');
     }
@@ -913,7 +921,9 @@
     const category = categories.find((row) => row.id === item.category_id);
     $('edit-product').textContent = item.name_fr + (category ? ' · ' + category.name_fr : '');
     editForm.nameFr.value = item.name_fr;
+    editForm.nameEn.value = item.name_en || '';
     editForm.descFr.value = item.description_fr || '';
+    editForm.descEn.value = item.description_en || '';
     $('edit-error').textContent = '';
     setEditPhoto({ file: null, remove: false });
     openDialog(editDialog); // focus goes to the first button, so the phone keyboard does not pop up
@@ -932,14 +942,19 @@
 
     const changes = {};
     const nameFr = editForm.nameFr.value.trim();
+    const nameEn = editForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
     const descFr = editForm.descFr.value.trim() || null;
-    if (!nameFr) {
-      $('edit-error').textContent = 'Le nom est obligatoire.';
-      editForm.nameFr.focus();
-      return;
-    }
+    const descEn = editForm.descEn.value.trim() || null;
+    const refuse = (message, field) => {
+      $('edit-error').textContent = message;
+      field.focus();
+    };
+    if (!nameFr) return refuse('Le nom est obligatoire.', editForm.nameFr);
+    if (descEn && !descFr) return refuse(EN_ONLY_DESCRIPTION, editForm.descFr);
     if (nameFr !== item.name_fr) changes.name_fr = nameFr;
+    if (nameEn !== (item.name_en || null)) changes.name_en = nameEn;
     if (descFr !== (item.description_fr || null)) changes.description_fr = descFr;
+    if (descEn !== (item.description_en || null)) changes.description_en = descEn;
     if (editPhoto.remove && item.image_url) changes.image_url = null;
     if (!editPhoto.file && !Object.keys(changes).length) {
       closeDialog(editDialog);
@@ -957,7 +972,7 @@
     try {
       if (editPhoto.file) newUrl = changes.image_url = await uploadPhotos('items', item.id, editPhoto.file);
       const { data, error } = await db.from('items').update(changes).eq('id', item.id)
-        .select('id, name_fr, description_fr, image_url');
+        .select('id, name_fr, name_en, description_fr, description_en, image_url');
       if (error) throw error;
       if (!data || !data.length) throw new Error('accès refusé');
       saved = data[0];
