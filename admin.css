@@ -1,27 +1,17 @@
-/*
-  Bolivar — admin page styles.
-  Self-contained: the public styles.css is not loaded here (its fixed header and menu
-  styles are made for the menu page). Mobile first: the owner will mostly use a phone.
-
-  Token names follow the café-site framework (--wine is simply the primary colour);
-  the values are Bolivar's navy and caramel.
-*/
-
-/* ---------- 1. Tokens ---------- */
 :root {
-  --wine: #1e2a3a;       /* primary: header, buttons, titles, prices (Bolivar navy) */
-  --wine-deep: #141c27;  /* hover */
-  --cream: #f8f4f0;      /* page text on dark, sheets */
-  --beige: #f0e8e0;      /* admin background */
-  --sand: #e8ddd5;       /* hairlines, tab bar */
-  --line: #d9cbbf;       /* borders of fields and buttons */
-  --gold: #c9956a;       /* caramel accent, decoration only */
-  --gold-light: #d4a882; /* small text on the navy header */
-  --ink: #1a1f2e;        /* main text */
-  --ink-soft: #6b5f57;   /* secondary text */
+  --wine: #1e2a3a;
+  --wine-deep: #141c27;
+  --cream: #f8f4f0;
+  --beige: #f0e8e0;
+  --sand: #e8ddd5;
+  --line: #d9cbbf;
+  --gold: #c9956a;
+  --gold-light: #d4a882;
+  --ink: #1a1f2e;
+  --ink-soft: #6b5f57;
   --white: #ffffff;
-  --kiss: #a8392c;       /* errors, delete */
-  --teal: #1e2a3a;       /* group titles, availability switch, focus ring */
+  --kiss: #a8392c;
+  --teal: #1e2a3a;
 
   --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -34,7 +24,6 @@
   --shadow-lift: 0 16px 40px rgba(30, 42, 58, 0.16);
 }
 
-/* ---------- 2. Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -60,7 +49,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .on-dark :focus-visible { outline-color: var(--gold-light); }
 
-/* ---------- 3. Header ---------- */
 .admin-header {
   position: sticky; top: 0; z-index: 50;
   height: var(--header-total);
@@ -74,7 +62,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .brand img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
 .brand-name { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; letter-spacing: 0.04em; color: var(--white); }
 
-/* ---------- 4. Buttons, sheets, toast ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 100%; max-width: 320px; min-height: 50px;
@@ -136,8 +123,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.is-error { background: var(--kiss); }
 
-/* ---------- 5. Admin page ---------- */
-
 .admin-page { background: var(--beige); min-height: 100vh; }
 
 .admin {
@@ -152,9 +137,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .drag-hint { display: inline-block; color: var(--wine); font-weight: 600; }
 .hint-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; color: var(--wine); }
 
-/* ---------- Header ---------- */
 .admin-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.admin-user[hidden] { display: none; } /* logged out: the display above would beat [hidden] */
+.admin-user[hidden] { display: none; }
 .admin-email {
   max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--gold-light); font-size: 0.8rem;
@@ -168,7 +152,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .admin-logout:hover { border-color: var(--cream); }
 
-/* ---------- Cards and forms ---------- */
 .admin-card {
   max-width: 420px;
   margin: 24px auto;
@@ -190,7 +173,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   padding: 10px 14px;
   border: 1.5px solid var(--line); border-radius: 12px;
   background: var(--white); color: var(--ink);
-  font: inherit; font-size: 1rem; /* 16px: stops phones from zooming in */
+  font: inherit; font-size: 1rem;
 }
 .field textarea { min-height: 70px; resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus, .price-field input:focus {
@@ -212,9 +195,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .btn-outline:hover { border-color: var(--wine); }
 
-/* ---------- Tabs ---------- */
 .admin-tabs {
-  display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 4px; /* one column per tab */
+  display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 4px;
   padding: 4px;
   margin-bottom: 20px;
   border-radius: 999px;
@@ -230,14 +212,35 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .admin-toolbar { display: grid; gap: 12px; }
 
-/* ---------- Product list ---------- */
 .adm-cat-block { margin-top: 24px; }
-.adm-cat-title {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+.adm-cat-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 12px;
   margin-bottom: 8px;
-  font-size: 1.5rem; font-style: italic; color: var(--wine);
 }
-.adm-cat-title small { font-family: var(--font-body); font-style: normal; font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); }
+.adm-cat-title { font-size: 1.5rem; font-style: italic; color: var(--wine); }
+.adm-cat-title small { margin-left: 8px; font-family: var(--font-body); font-style: normal; font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); }
+.adm-order-toggle { font-weight: 600; color: var(--wine); }
+.adm-order-toggle[aria-pressed="true"] {
+  padding: 0 18px; border-radius: 999px; background: var(--wine); color: var(--cream); text-decoration: none;
+}
+.adm-order-hint { margin-bottom: 10px; }
+.adm-order { display: grid; gap: 8px; }
+.adm-order-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: 0 2px 10px rgba(30, 42, 58, 0.05);
+}
+.adm-order-row.is-ghost { opacity: 0.4; }
+.adm-order-row.is-chosen { box-shadow: var(--shadow-lift); }
+.adm-order-row > .drag-handle,
+.adm-order-row > .adm-cat-name,
+.adm-order-row > .adm-cat-move { grid-area: auto; }
+.adm-order-row > .adm-cat-move { padding-left: 0; border-left: 0; }
 .adm-group-title {
   margin: 14px 0 6px;
   color: var(--teal);
@@ -303,7 +306,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .price-field { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--wine); }
 .price-field input { width: 110px; min-height: 40px; padding: 6px 10px; text-align: right; font-variant-numeric: tabular-nums; }
 
-/* Availability switch (a real checkbox underneath) */
 .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; color: var(--ink-soft); }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch-ui {
@@ -327,10 +329,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .adm-empty { padding: 28px 0; text-align: center; color: var(--ink-soft); }
 
-/* ---------- Category order ---------- */
 .adm-cats { display: grid; gap: 8px; }
-/* Phones: the name on the whole first line, then pencil / bin on the left and the arrows on
-   the right. From 600 px everything sits on one line (see the media query at the end). */
 .adm-cat {
   display: grid;
   grid-template-columns: auto 52px 1fr auto;
@@ -355,7 +354,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .adm-cat .adm-thumb { width: 52px; height: 52px; }
 .adm-cat-name { grid-area: name; min-width: 0; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
 .adm-cat-name small { display: block; color: var(--ink-soft); font-size: 0.78rem; font-weight: 400; }
-.adm-cat-actions { grid-area: actions; display: flex; gap: 2px; margin-left: -10px; } /* icons line up with the name */
+.adm-cat-actions { grid-area: actions; display: flex; gap: 2px; margin-left: -10px; }
 .adm-cat-move { grid-area: move; display: flex; justify-content: flex-end; gap: 4px; }
 .move-btn {
   display: grid; place-items: center;
@@ -369,7 +368,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .adm-cat.is-ghost { opacity: 0.4; }
 .adm-cat.is-chosen { box-shadow: var(--shadow-lift); }
 
-/* ---------- Add / edit sheets ---------- */
 .admin-dialog { max-width: min(560px, 100%); }
 .admin-dialog-body { margin: 0; padding: 4px 20px 8px; overflow-y: auto; }
 .photo-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -381,9 +379,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .file-input { position: fixed; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
-/* ---------- "Infos" tab (footer of the website) ---------- */
 .info-form { margin-top: 0; gap: 16px; }
-.info-form[hidden] { display: none; } /* .admin-form sets a display, which would beat [hidden] */
+.info-form[hidden] { display: none; }
 .info-group {
   display: grid; gap: 12px;
   min-width: 0; margin: 0; padding: 18px 16px;
@@ -393,7 +390,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .info-group legend { float: left; width: 100%; padding: 0; font-family: var(--font-display); font-size: 1.35rem; font-style: italic; font-weight: 600; color: var(--wine); }
 .info-group legend + * { clear: both; }
-/* "Lundi – Vendredi" above, then opening and closing time side by side */
 .info-hours { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
 .info-days { grid-column: 1 / -1; font-weight: 600; }
 .info-form > .btn-wine { justify-self: start; }
@@ -401,7 +397,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .admin-note[hidden] { display: none; }
 
 @media (max-width: 519px) {
-  .admin-email { display: none; } /* not enough room next to the logo; "Déconnexion" stays */
+  .admin-email { display: none; }
 }
 
 @media (min-width: 600px) {
@@ -409,7 +405,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   .sel-sheet { margin: auto; border-radius: 24px; }
   .admin { padding-top: 32px; }
   .admin-toolbar { grid-template-columns: 1fr auto; align-items: end; }
-  .admin-toolbar > .btn:only-child { grid-column: 2; } /* "+ Ajouter une catégorie" alone, on the right */
+  .admin-toolbar > .btn:only-child { grid-column: 2; }
   .adm-cat {
     grid-template-columns: auto 52px 1fr auto auto;
     grid-template-areas: "handle thumb name actions move";

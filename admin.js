@@ -1,29 +1,8 @@
-/*
-  Bolivar — admin page script (the page itself is in French, for the owner)
-
-  What it does
-  - Log in / log out with Supabase Auth. Only accounts listed in the "admins" table can edit.
-  - Products: add one (category, name, description, price, photo, available), change a price,
-    make an item available / unavailable, change its photo, edit its name and description
-    (FR / EN) or remove its photo, delete it.
-  - Categories: add one (name FR / EN and photo, placed at the end of the menu), change their
-    order by dragging (SortableJS) or with the arrows, change a photo, rename one, delete one
-    (with its products).
-  - Infos: opening hours, Wi-Fi, address, Google Maps link and phone, shown in the ☰ menu of
-    the website and in its footer (table public.settings).
-
-  Security: the database rules in supabase/schema.sql decide who may change what.
-  This page only offers the tools; it does not protect anything by itself.
-
-  Photos are shrunk in the browser before upload into two copies, "…-800.webp" and
-  "…-480.webp" (JPEG on browsers that cannot make WebP). The website uses the small one
-  next to products and the large one for category banners.
-*/
 (function () {
   'use strict';
 
   const BUCKET = 'menu';
-  const PHOTO_SIZES = [800, 480]; // the 800 px copy must come first
+  const PHOTO_SIZES = [800, 480];
   const VIEWS = ['view-loading', 'view-setup', 'view-error', 'view-login', 'view-denied', 'view-app'];
   const $ = (id) => document.getElementById(id);
 
@@ -47,20 +26,19 @@
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const STORAGE_PREFIX = SUPABASE_URL.replace(/\/$/, '') + '/storage/v1/object/public/' + BUCKET + '/';
 
-  let categories = []; // rows of public.categories, in menu order
-  let items = [];      // rows of public.items
-  let settings = null; // key -> value of public.settings; null while that table is missing
+  let categories = [];
+  let items = [];
+  let settings = null;
   let sortable = null;
-  let photoTarget = null;     // what the shared file picker is choosing a photo for
-  let newProductPhoto = null; // File chosen in the "add a product" form
-  let newCategoryPhoto = null; // File chosen in the "add a category" form
-  let editingId = null;       // product open in the "edit" sheet
-  let editPhoto = { file: null, remove: false }; // photo change waiting in the "edit" sheet
-  let previewUrl = null;      // local address of the photo previewed in the open sheet
+  let photoTarget = null;
+  let newProductPhoto = null;
+  let newCategoryPhoto = null;
+  let editingId = null;
+  let editPhoto = { file: null, remove: false };
+  let reorderingCategory = null;
+  let itemSortable = null;
+  let previewUrl = null;
 
-  /* ---------- Helpers ---------- */
-
-  // Build an element; text is always inserted as text, never as HTML
   function el(tag, props, ...children) {
     const node = document.createElement(tag);
     for (const key in props) {
@@ -72,7 +50,6 @@
     return node;
   }
 
-  // Our own fixed icon drawings (constant markup, never data)
   const ICONS = {
     camera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
     trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
@@ -84,7 +61,6 @@
     return holder.firstElementChild;
   }
 
-  // Prices have 2 decimals, as on the website ("15.50 DT")
   function formatPrice(amount) {
     return Number(amount).toFixed(2) + ' DT';
   }
@@ -113,8 +89,6 @@
     console.error(what, error);
     toast('Erreur : ' + what + (error && error.message ? ' (' + error.message + ')' : '') + '.', true);
   }
-
-  /* ---------- Login ---------- */
 
   async function useSession(session) {
     const user = session ? session.user : null;
@@ -166,8 +140,6 @@
     useSession(null);
   });
 
-  /* ---------- Data ---------- */
-
   async function loadAll() {
     const [cats, rows, info] = await Promise.all([
       db.from('categories').select('*').order('position'),
@@ -180,7 +152,6 @@
     }
     categories = cats.data;
     items = rows.data;
-    // The café's details are extra: a database without the settings table still edits the menu
     if (info.error) console.warn('Settings not loaded:', info.error);
     settings = info.error ? null : Object.fromEntries(info.data.map((row) => [row.key, row.value]));
     showView('view-app');
@@ -194,8 +165,6 @@
     return items.filter((item) => item.category_id === categoryId).sort((a, b) => a.position - b.position);
   }
 
-  // Sections of a category, in the order they appear on the menu. The website has no sections:
-  // every product is in one untitled group unless a section was set in the Supabase table editor.
   function groupsOf(categoryId) {
     const groups = [];
     const byKey = new Map();
@@ -208,19 +177,14 @@
       }
       byKey.get(key).items.push(item);
     }
-    // Products without a section come first
     return groups.sort((a, b) => Number(Boolean(a.fr || a.extra)) - Number(Boolean(b.fr || b.extra)));
   }
 
-  // "Orange (Jus et Cocktails)": the same name is used in several categories ("Nutella",
-  // "Spéculoos"…), so messages and screen-reader labels name the category too
   function itemLabel(item) {
     const category = categories.find((row) => row.id === item.category_id);
     return item.name_fr + ' (' + (category ? category.name_fr : item.category_id)
       + (item.group_fr ? ' · ' + item.group_fr : '') + ')';
   }
-
-  /* ---------- Products tab ---------- */
 
   function renderCategoryFilter() {
     const select = $('filter-category');
@@ -282,22 +246,109 @@
           el('span', { className: 'switch-text' }, item.available ? 'Disponible' : 'Indisponible'))));
   }
 
+  function renderOrderRow(item, index, total) {
+    return el('li', { className: 'adm-order-row', dataset: { id: item.id } },
+      el('span', { className: 'drag-handle', attrs: { 'aria-hidden': 'true', title: 'Faire glisser' } }, '⠿'),
+      el('p', { className: 'adm-cat-name' }, item.name_fr, el('small', {}, formatPrice(item.price))),
+      el('div', { className: 'adm-cat-move' },
+        el('button', {
+          type: 'button', className: 'move-btn', disabled: index === 0,
+          attrs: { 'aria-label': 'Monter ' + itemLabel(item) }, dataset: { itemMove: '-1' },
+        }, '↑'),
+        el('button', {
+          type: 'button', className: 'move-btn', disabled: index === total - 1,
+          attrs: { 'aria-label': 'Descendre ' + itemLabel(item) }, dataset: { itemMove: '1' },
+        }, '↓')));
+  }
+
   function renderItems() {
+    if (itemSortable) {
+      itemSortable.destroy();
+      itemSortable = null;
+    }
     const filter = $('filter-category').value;
     const blocks = categories
       .filter((category) => filter === 'all' || category.id === filter)
       .map((category) => {
-        const count = itemsOf(category.id).length;
-        return el('section', { className: 'adm-cat-block', attrs: { 'aria-label': category.name_fr } },
-          el('h2', { className: 'adm-cat-title' }, category.name_fr, el('small', {}, plural(count, 'produit'))),
-          count === 0 ? el('p', { className: 'adm-empty' }, 'Aucun produit dans cette catégorie.') : null,
-          ...groupsOf(category.id).map((group) => el('div', {},
+        const own = itemsOf(category.id);
+        const reordering = reorderingCategory === category.id;
+        const children = [
+          el('div', { className: 'adm-cat-head' },
+            el('h2', { className: 'adm-cat-title' }, category.name_fr, el('small', {}, plural(own.length, 'produit'))),
+            own.length > 1 ? el('button', {
+              type: 'button',
+              className: 'text-btn adm-order-toggle',
+              attrs: { 'aria-pressed': String(reordering) },
+              dataset: { reorder: category.id },
+            }, reordering ? 'Terminé' : "Changer l'ordre") : null),
+        ];
+        if (own.length === 0) children.push(el('p', { className: 'adm-empty' }, 'Aucun produit dans cette catégorie.'));
+        if (reordering) {
+          children.push(el('p', { className: 'admin-muted adm-order-hint' },
+            "Faites glisser ⠿ ou utilisez les flèches : l'ordre est enregistré tout de suite."));
+          children.push(el('ul', { className: 'adm-order', dataset: { orderFor: category.id } },
+            ...own.map((item, index) => renderOrderRow(item, index, own.length))));
+        } else {
+          children.push(...groupsOf(category.id).map((group) => el('div', {},
             group.fr || group.extra
               ? el('h3', { className: 'adm-group-title' }, (group.fr || 'Sans section') + (group.extra ? ' · suppléments' : ''))
               : null,
             el('ul', { className: 'adm-items' }, ...group.items.map(renderItemRow)))));
+        }
+        return el('section', { className: 'adm-cat-block', attrs: { 'aria-label': category.name_fr } }, ...children);
       });
     $('items-list').replaceChildren(...blocks);
+    const orderList = $('items-list').querySelector('.adm-order');
+    if (orderList) {
+      itemSortable = Sortable.create(orderList, {
+        handle: '.drag-handle',
+        forceFallback: true,
+        fallbackTolerance: 3,
+        animation: 150,
+        ghostClass: 'is-ghost',
+        chosenClass: 'is-chosen',
+        onEnd: () => saveItemOrder(orderList.dataset.orderFor),
+      });
+    }
+  }
+
+  function toggleReorder(categoryId) {
+    reorderingCategory = reorderingCategory === categoryId ? null : categoryId;
+    renderItems();
+    const again = $('items-list').querySelector('[data-reorder="' + CSS.escape(categoryId) + '"]');
+    if (again) again.focus();
+  }
+
+  function moveItem(row, delta) {
+    const sibling = delta < 0 ? row.previousElementSibling : row.nextElementSibling;
+    if (!sibling) return;
+    if (delta < 0) sibling.before(row);
+    else sibling.after(row);
+    saveItemOrder(row.parentElement.dataset.orderFor, { id: row.dataset.id, delta });
+  }
+
+  async function saveItemOrder(categoryId, focus) {
+    const list = $('items-list').querySelector('.adm-order');
+    if (!list) return;
+    const own = itemsOf(categoryId);
+    const ids = [...list.children].map((row) => row.dataset.id);
+    if (ids.join('|') === own.map((item) => item.id).join('|')) return;
+    const { error } = await db.rpc('reorder_items', { ids });
+    if (error) {
+      fail(error, "l'ordre des produits n'a pas été enregistré");
+      renderItems();
+      return;
+    }
+    const byId = new Map(own.map((item) => [item.id, item]));
+    ids.forEach((id, index) => { byId.get(id).position = index + 1; });
+    renderItems();
+    if (focus) {
+      const row = $('items-list').querySelector('.adm-order-row[data-id="' + CSS.escape(focus.id) + '"]');
+      const same = row && row.querySelector('[data-item-move="' + focus.delta + '"]');
+      const other = row && row.querySelector('[data-item-move="' + -focus.delta + '"]');
+      if (same || other) (same && !same.disabled ? same : other).focus();
+    }
+    toast('Ordre des produits enregistré');
   }
 
   async function savePrice(id, input) {
@@ -362,7 +413,10 @@
     toast('« ' + itemLabel(item) + ' » a été supprimé');
   }
 
-  $('filter-category').addEventListener('change', renderItems);
+  $('filter-category').addEventListener('change', () => {
+    reorderingCategory = null;
+    renderItems();
+  });
 
   $('items-list').addEventListener('change', (event) => {
     const target = event.target;
@@ -370,10 +424,8 @@
     else if (target.dataset.availableFor) saveAvailable(target.dataset.availableFor, target);
   });
   $('items-list').addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && event.target.dataset.priceFor) event.target.blur(); // saves
+    if (event.key === 'Enter' && event.target.dataset.priceFor) event.target.blur();
   });
-
-  /* ---------- Photos ---------- */
 
   function loadImage(file) {
     return new Promise((resolve, reject) => {
@@ -389,7 +441,6 @@
     return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
   }
 
-  // Makes the 800 px and 480 px copies (never enlarges a small photo)
   async function preparePhotos(file) {
     if (!file.type.startsWith('image/')) throw new Error('choisissez une image (JPEG, PNG, WebP…)');
     const img = await loadImage(file);
@@ -400,19 +451,18 @@
       canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
       canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF'; // transparent PNGs get a white background
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       let blob = await canvasToBlob(canvas, 'image/webp', 0.8);
-      if (!blob || blob.type !== 'image/webp') blob = await canvasToBlob(canvas, 'image/jpeg', 0.82); // e.g. Safari
+      if (!blob || blob.type !== 'image/webp') blob = await canvasToBlob(canvas, 'image/jpeg', 0.82);
       if (!blob) throw new Error("la photo n'a pas pu être préparée");
       copies.push({ width, blob, ext: blob.type === 'image/webp' ? 'webp' : 'jpg' });
     }
     return copies;
   }
 
-  // Uploads both copies and returns the public address of the 800 px one
   async function uploadPhotos(folder, id, file) {
     const copies = await preparePhotos(file);
     const base = folder + '/' + id + '-' + Date.now();
@@ -435,7 +485,6 @@
     return db.storage.from(BUCKET).getPublicUrl(base + '-800.' + copies[0].ext).data.publicUrl;
   }
 
-  // Deletes a photo uploaded from this page (the Unsplash photos the site started with are left alone)
   async function removeStoredPhoto(url) {
     if (!url || !url.startsWith(STORAGE_PREFIX)) return;
     const path = decodeURIComponent(url.slice(STORAGE_PREFIX.length));
@@ -492,9 +541,6 @@
     await removeStoredPhoto(oldUrl);
   }
 
-  // Redraws only the photo buttons of one product or category: the upload can take a while,
-  // and redrawing the whole list would throw away a price the owner is typing meanwhile.
-  // Keyboard focus stays on the photo button only if it was still there.
   function refreshThumbs(kind, row) {
     const selector = '.adm-thumb[data-photo-kind="' + kind + '"][data-photo-id="' + CSS.escape(row.id) + '"]';
     for (const old of document.querySelectorAll(selector)) {
@@ -505,8 +551,6 @@
     }
   }
 
-  /* ---------- Categories tab ---------- */
-
   function renderCategories() {
     const list = $('categories-list');
     list.replaceChildren(...categories.map((category, index) => {
@@ -515,7 +559,6 @@
         el('span', { className: 'drag-handle', attrs: { 'aria-hidden': 'true', title: 'Faire glisser' } }, '⠿'),
         categoryThumb(category),
         el('p', { className: 'adm-cat-name' }, category.name_fr,
-          // The public menu hides a category without products
           el('small', {}, plural(count, 'produit') + (count ? '' : ' · pas encore sur la carte'))),
         el('div', { className: 'adm-cat-actions' },
           el('button', {
@@ -544,7 +587,7 @@
     if (!sortable) {
       sortable = Sortable.create(list, {
         handle: '.drag-handle',
-        forceFallback: true, // same pointer-based dragging on phones and computers
+        forceFallback: true,
         fallbackTolerance: 3,
         animation: 150,
         ghostClass: 'is-ghost',
@@ -568,7 +611,7 @@
     const { error } = await db.rpc('reorder_categories', { ids });
     if (error) {
       fail(error, "l'ordre n'a pas été enregistré");
-      renderCategories(); // put the list back as it is saved
+      renderCategories();
       return;
     }
     const byId = new Map(categories.map((category) => [category.id, category]));
@@ -584,8 +627,6 @@
     }
     toast('Ordre des catégories enregistré');
   }
-
-  /* ---------- Clicks anywhere on the page ---------- */
 
   document.addEventListener('click', (event) => {
     const thumb = event.target.closest('.adm-thumb');
@@ -603,6 +644,16 @@
       deleteItem(remove.dataset.deleteId);
       return;
     }
+    const reorder = event.target.closest('[data-reorder]');
+    if (reorder) {
+      toggleReorder(reorder.dataset.reorder);
+      return;
+    }
+    const itemMove = event.target.closest('[data-item-move]');
+    if (itemMove) {
+      moveItem(itemMove.closest('.adm-order-row'), Number(itemMove.dataset.itemMove));
+      return;
+    }
     const editCategory = event.target.closest('[data-edit-category]');
     if (editCategory) {
       openCategoryEditDialog(editCategory.dataset.editCategory);
@@ -616,8 +667,6 @@
     const move = event.target.closest('[data-move]');
     if (move) moveCategory(move.closest('.adm-cat'), Number(move.dataset.move));
   });
-
-  /* ---------- Tabs ---------- */
 
   const TABS = [['tab-btn-items', 'tab-items'], ['tab-btn-categories', 'tab-categories'], ['tab-btn-info', 'tab-info']];
   function selectTab(buttonId) {
@@ -639,44 +688,37 @@
     });
   }
 
-  /* ---------- Sheets (shared by "add" and "edit") ---------- */
-
   function openDialog(dialog) {
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
   }
   function closeDialog(dialog) {
-    if (dialog.dataset.busy) return; // still saving
+    if (dialog.dataset.busy) return;
     if (typeof dialog.close === 'function') dialog.close();
     else dialog.removeAttribute('open');
   }
-  // While a sheet is saving it stays open (Esc, ×, Annuler and the dark area do nothing),
-  // so the owner sees whether it worked
   function setBusy(dialog, busy) {
     if (busy) dialog.dataset.busy = 'true';
     else delete dialog.dataset.busy;
   }
-  // The error goes in the sheet; and in a red toast too if the browser closed the sheet anyway
   function sheetError(dialog, node, message) {
     node.textContent = message;
     if (!dialog.open) toast(message, true);
   }
   for (const dialog of document.querySelectorAll('.admin-dialog')) {
     dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) closeDialog(dialog); // click on the dark area around the sheet
+      if (event.target === dialog) closeDialog(dialog);
     });
     dialog.addEventListener('cancel', (event) => {
-      if (dialog.dataset.busy) event.preventDefault(); // Esc
+      if (dialog.dataset.busy) event.preventDefault();
     });
   }
 
-  // An English description is shown only next to a French one (French is the main language)
   const EN_ONLY_DESCRIPTION = "Écrivez aussi la description en français : sans elle, la description anglaise n'est pas affichée.";
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.addEventListener('click', () => closeDialog(button.closest('dialog')));
   }
 
-  // Shows a photo in a sheet: a File not uploaded yet, the address of a saved one, or nothing
   function showPhotoPreview(prefix, photo) {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = photo instanceof Blob ? URL.createObjectURL(photo) : null;
@@ -685,12 +727,10 @@
     preview.hidden = !src;
     if (src) preview.src = src;
     else preview.removeAttribute('src');
-    const clear = $(prefix + '-photo-clear'); // a category keeps its photo: no "Retirer" there
+    const clear = $(prefix + '-photo-clear');
     if (clear) clear.hidden = !src;
     $(prefix + '-photo-btn').textContent = src ? 'Changer la photo' : 'Choisir une photo';
   }
-
-  /* ---------- "Add a product" sheet ---------- */
 
   const productDialog = $('product-dialog');
   const form = $('product-form');
@@ -715,7 +755,7 @@
   $('product-photo-btn').addEventListener('click', () => choosePhoto({ kind: 'new' }));
   $('product-photo-clear').addEventListener('click', () => {
     setNewProductPhoto(null);
-    $('product-photo-btn').focus(); // the "Retirer" button has just disappeared
+    $('product-photo-btn').focus();
   });
 
   form.addEventListener('submit', async (event) => {
@@ -777,13 +817,9 @@
     }
   });
 
-  /* ---------- "Add a category" sheet ---------- */
-
   const categoryDialog = $('category-dialog');
   const categoryForm = $('category-form');
 
-  // Short id used in the menu's links (#…), from the name: "Crêpes salées" → "crepes-salees",
-  // with "-2", "-3"… when it is already taken
   function categoryIdFor(name) {
     const base = name.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
       .replace(/[^a-z0-9]+/g, '-').slice(0, 40).replace(/^-+|-+$/g, '') || 'categorie';
@@ -809,7 +845,7 @@
   $('category-photo-btn').addEventListener('click', () => choosePhoto({ kind: 'newCategory' }));
   $('category-photo-clear').addEventListener('click', () => {
     setNewCategoryPhoto(null);
-    $('category-photo-btn').focus(); // the "Retirer" button has just disappeared
+    $('category-photo-btn').focus();
   });
 
   categoryForm.addEventListener('submit', async (event) => {
@@ -820,12 +856,11 @@
     };
 
     const nameFr = categoryForm.nameFr.value.trim();
-    const nameEn = categoryForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
+    const nameEn = categoryForm.nameEn.value.trim() || null;
     if (!nameFr) return showFormError('Le nom est obligatoire.', categoryForm.nameFr);
     if (categories.some((category) => category.name_fr.toLowerCase() === nameFr.toLowerCase())) {
       return showFormError('Une catégorie porte déjà ce nom.', categoryForm.nameFr);
     }
-    // The menu shows each category as a photo banner, so a category without one would look broken
     if (!newCategoryPhoto) {
       return showFormError('Choisissez une photo pour la catégorie.', $('category-photo-btn'));
     }
@@ -862,12 +897,10 @@
     }
   });
 
-  /* ---------- "Edit a category" sheet (name and photo) and deleting a category ---------- */
-
   const categoryEditDialog = $('category-edit-dialog');
   const categoryEditForm = $('category-edit-form');
-  let editingCategoryId = null;   // category open in the "edit" sheet
-  let categoryEditPhoto = null;   // new photo waiting in that sheet (a category always keeps one)
+  let editingCategoryId = null;
+  let categoryEditPhoto = null;
 
   function setCategoryEditPhoto(file) {
     categoryEditPhoto = file;
@@ -884,7 +917,7 @@
     categoryEditForm.nameEn.value = category.name_en || '';
     $('category-edit-error').textContent = '';
     setCategoryEditPhoto(null);
-    openDialog(categoryEditDialog); // focus goes to the first button, so the phone keyboard does not pop up
+    openDialog(categoryEditDialog);
   }
 
   $('category-edit-photo-btn').addEventListener('click', () => choosePhoto({ kind: 'editCategory' }));
@@ -895,7 +928,7 @@
     if (!category) return closeDialog(categoryEditDialog);
 
     const nameFr = categoryEditForm.nameFr.value.trim();
-    const nameEn = categoryEditForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
+    const nameEn = categoryEditForm.nameEn.value.trim() || null;
     const refuse = (message, field) => {
       $('category-edit-error').textContent = message;
       field.focus();
@@ -904,7 +937,6 @@
     if (categories.some((row) => row.id !== category.id && row.name_fr.toLowerCase() === nameFr.toLowerCase())) {
       return refuse('Une catégorie porte déjà ce nom.', categoryEditForm.nameFr);
     }
-    // The id (used in the menu's links) stays the same when the category is renamed
     const changes = {};
     if (nameFr !== category.name_fr) changes.name_fr = nameFr;
     if (nameEn !== (category.name_en || null)) changes.name_en = nameEn;
@@ -953,8 +985,6 @@
     if (newUrl) await removeStoredPhoto(oldUrl);
   });
 
-  // A category is deleted together with its products (the database refuses to keep products
-  // without a category), after a confirmation that says how many products go with it
   async function deleteCategory(id) {
     const category = categories.find((row) => row.id === id);
     if (!category) return;
@@ -988,17 +1018,13 @@
     renderCategories();
     renderCategoryFilter();
     renderItems();
-    $('add-category').focus(); // the row that had the focus is gone
+    $('add-category').focus();
     toast('Catégorie « ' + category.name_fr + ' » supprimée' + (own.length ? ' avec ' + plural(own.length, 'produit') : ''));
   }
 
-  /* ---------- "Infos" tab (footer of the website) ---------- */
-
-  // One row of public.settings each, in the order of the form; an empty value is not shown
   const INFO_KEYS = ['hours_week_open', 'hours_week_close', 'hours_weekend_open', 'hours_weekend_close',
     'wifi_name', 'wifi_password', 'address', 'maps_url', 'phone'];
   const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-  // Same rule on the website: only Google Maps links are used there
   const MAPS_LINK = /^https:\/\/((www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}|maps\.app\.goo\.gl|goo\.gl\/maps)\//i;
   const PHONE = /^\+?[0-9][0-9 .-]{5,18}$/;
   const infoForm = $('info-form');
@@ -1057,12 +1083,9 @@
     toast('Informations enregistrées : le site les affiche au prochain chargement');
   });
 
-  /* ---------- "Edit a product" sheet (name, description and photo) ---------- */
-
   const editDialog = $('edit-dialog');
   const editForm = $('edit-form');
 
-  // change = { file: a new photo to upload, or remove: true to take the photo off }
   function setEditPhoto(change) {
     editPhoto = change;
     const item = items.find((row) => row.id === editingId);
@@ -1077,19 +1100,21 @@
     editingId = id;
     const category = categories.find((row) => row.id === item.category_id);
     $('edit-product').textContent = item.name_fr + (category ? ' · ' + category.name_fr : '');
+    editForm.category.replaceChildren(...categories.map((row) => el('option', { value: row.id }, row.name_fr)));
+    editForm.category.value = item.category_id;
     editForm.nameFr.value = item.name_fr;
     editForm.nameEn.value = item.name_en || '';
     editForm.descFr.value = item.description_fr || '';
     editForm.descEn.value = item.description_en || '';
     $('edit-error').textContent = '';
     setEditPhoto({ file: null, remove: false });
-    openDialog(editDialog); // focus goes to the first button, so the phone keyboard does not pop up
+    openDialog(editDialog);
   }
 
   $('edit-photo-btn').addEventListener('click', () => choosePhoto({ kind: 'edit' }));
   $('edit-photo-clear').addEventListener('click', () => {
     setEditPhoto({ file: null, remove: true });
-    $('edit-photo-btn').focus(); // the "Retirer" button has just disappeared
+    $('edit-photo-btn').focus();
   });
 
   editForm.addEventListener('submit', async (event) => {
@@ -1099,7 +1124,7 @@
 
     const changes = {};
     const nameFr = editForm.nameFr.value.trim();
-    const nameEn = editForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
+    const nameEn = editForm.nameEn.value.trim() || null;
     const descFr = editForm.descFr.value.trim() || null;
     const descEn = editForm.descEn.value.trim() || null;
     const refuse = (message, field) => {
@@ -1113,6 +1138,11 @@
     if (descFr !== (item.description_fr || null)) changes.description_fr = descFr;
     if (descEn !== (item.description_en || null)) changes.description_en = descEn;
     if (editPhoto.remove && item.image_url) changes.image_url = null;
+    const categoryId = editForm.category.value;
+    if (categoryId && categoryId !== item.category_id) {
+      changes.category_id = categoryId;
+      changes.position = Math.max(0, ...itemsOf(categoryId).map((row) => row.position)) + 1;
+    }
     if (!editPhoto.file && !Object.keys(changes).length) {
       closeDialog(editDialog);
       toast('Aucune modification');
@@ -1129,7 +1159,7 @@
     try {
       if (editPhoto.file) newUrl = changes.image_url = await uploadPhotos('items', item.id, editPhoto.file);
       const { data, error } = await db.from('items').update(changes).eq('id', item.id)
-        .select('id, name_fr, name_en, description_fr, description_en, image_url');
+        .select('id, category_id, position, name_fr, name_en, description_fr, description_en, image_url');
       if (error) throw error;
       if (!data || !data.length) throw new Error('accès refusé');
       saved = data[0];
@@ -1147,21 +1177,22 @@
     const oldUrl = item.image_url;
     Object.assign(item, saved);
     closeDialog(editDialog);
+    if ('category_id' in changes) {
+      if ($('filter-category').value !== 'all') $('filter-category').value = item.category_id;
+      renderCategories();
+    }
     renderItems();
     const again = $('items-list').querySelector('[data-edit-id="' + CSS.escape(item.id) + '"]');
     if (again) again.focus();
-    // "Nom enregistré", "Description enregistrée", "Photo mise à jour" / "Photo retirée",
-    // or "Modifications enregistrées" when more than one of them changed
-    const kinds = new Set(Object.keys(changes).map((field) => field.split('_')[0]));
+    const kinds = new Set(Object.keys(changes).filter((field) => field !== 'position').map((field) => field.split('_')[0]));
     const what = kinds.size > 1 ? 'Modifications enregistrées'
-      : kinds.has('name') ? 'Nom enregistré'
-        : kinds.has('description') ? 'Description enregistrée'
-          : changes.image_url ? 'Photo mise à jour' : 'Photo retirée';
+      : kinds.has('category') ? 'Produit déplacé'
+        : kinds.has('name') ? 'Nom enregistré'
+          : kinds.has('description') ? 'Description enregistrée'
+            : changes.image_url ? 'Photo mise à jour' : 'Photo retirée';
     toast(what + ' : ' + itemLabel(item));
     if ('image_url' in changes) await removeStoredPhoto(oldUrl);
   });
-
-  /* ---------- Start ---------- */
 
   db.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') useSession(null);

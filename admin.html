@@ -14,8 +14,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="admin.css">
 
-  <!-- Libraries for this page only, pinned versions with integrity checks:
-       supabase-js (login, database, photo storage) and SortableJS (drag to reorder). -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"
           integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R"
           crossorigin="anonymous" defer></script>
@@ -40,7 +38,6 @@
   <main class="admin">
     <p class="admin-status" id="view-loading">Chargement…</p>
 
-    <!-- supabase-config.js is still empty -->
     <section class="admin-card" id="view-setup" hidden>
       <h1>Configuration manquante</h1>
       <p>Renseignez l'adresse et la clé publique (publishable) de votre projet Supabase dans
@@ -83,7 +80,6 @@
         <button type="button" role="tab" id="tab-btn-info" aria-controls="tab-info" aria-selected="false" tabindex="-1">Infos</button>
       </div>
 
-      <!-- ============ PRODUCTS ============ -->
       <div class="admin-panel" role="tabpanel" id="tab-items" aria-labelledby="tab-btn-items">
         <div class="admin-toolbar">
           <label class="field field-inline">
@@ -94,11 +90,10 @@
         </div>
         <p class="admin-muted admin-hint">Le prix et la disponibilité sont enregistrés dès que vous les changez.
           Touchez une photo pour la remplacer, ou le crayon <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/></svg>
-          pour modifier le nom, la description ou la photo.</p>
+          pour modifier le nom, la description, la photo ou la catégorie. « Changer l'ordre » range les produits d'une catégorie.</p>
         <div id="items-list"></div>
       </div>
 
-      <!-- ============ CATEGORIES ============ -->
       <div class="admin-panel" role="tabpanel" id="tab-categories" aria-labelledby="tab-btn-categories" hidden>
         <div class="admin-toolbar">
           <button class="btn btn-wine" type="button" id="add-category">+ Ajouter une catégorie</button>
@@ -110,7 +105,6 @@
         <ul class="adm-cats" id="categories-list"></ul>
       </div>
 
-      <!-- ============ INFOS (shown in the footer of the website) ============ -->
       <div class="admin-panel" role="tabpanel" id="tab-info" aria-labelledby="tab-btn-info" hidden>
         <p class="admin-muted admin-hint">Ces informations s'affichent dans le menu ☰ du site et en bas de page.
           Laissez vide ce qui ne s'applique pas : rien ne s'affiche à la place.</p>
@@ -168,7 +162,6 @@
     </section>
   </main>
 
-  <!-- ============ ADD A PRODUCT ============ -->
   <dialog class="sel-sheet admin-dialog" id="product-dialog" aria-labelledby="product-title">
     <form class="sel-inner" id="product-form" novalidate>
       <div class="sel-head">
@@ -228,7 +221,6 @@
     </form>
   </dialog>
 
-  <!-- ============ ADD A CATEGORY ============ -->
   <dialog class="sel-sheet admin-dialog" id="category-dialog" aria-labelledby="category-title">
     <form class="sel-inner" id="category-form" novalidate>
       <div class="sel-head">
@@ -268,7 +260,6 @@
     </form>
   </dialog>
 
-  <!-- ============ EDIT A CATEGORY (name and photo) ============ -->
   <dialog class="sel-sheet admin-dialog" id="category-edit-dialog" aria-labelledby="category-edit-title">
     <form class="sel-inner" id="category-edit-form" novalidate>
       <div class="sel-head">
@@ -307,7 +298,6 @@
     </form>
   </dialog>
 
-  <!-- ============ EDIT A PRODUCT (name, description and photo) ============ -->
   <dialog class="sel-sheet admin-dialog" id="edit-dialog" aria-labelledby="edit-title">
     <form class="sel-inner" id="edit-form" novalidate>
       <div class="sel-head">
@@ -319,6 +309,10 @@
       <p class="sel-hint edit-product" id="edit-product"></p>
 
       <div class="admin-form admin-dialog-body">
+        <label class="field">
+          <span>Catégorie</span>
+          <select name="category"></select>
+        </label>
         <label class="field">
           <span>Nom *</span>
           <input name="nameFr" maxlength="80" required autocomplete="off">
@@ -355,7 +349,6 @@
     </form>
   </dialog>
 
-  <!-- One shared photo picker (visually hidden, not display:none, so phones still open it) -->
   <input class="file-input" type="file" id="photo-input" accept="image/*" tabindex="-1" aria-hidden="true">
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

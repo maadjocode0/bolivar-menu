@@ -1,11 +1,3 @@
-/*
-  Bolivar — built-in copy of the menu.
-
-  - Used to fill the Supabase database once (supabase/seed.sql was generated from this file).
-  - Shown when supabase-config.js is empty, or when Supabase has never been reached on this
-    phone. Once the database is set up, prices and products are changed on admin.html,
-    not here.
-*/
 const MENU_DATA = [
   { category: "Petit Déjeuner", en: "Breakfast", image: "", items: [
     { name: "L'Express", price: 8, desc: "Café au choix, jus frais, eau 0.5L, viennoiserie (croissant/cake)", descEn: "Coffee of your choice, fresh juice, 0.5L water, pastry (croissant/cake)" },

@@ -1,49 +1,26 @@
-/*
-  Bolivar — page script (plain JavaScript, no libraries)
-
-  1. Menu data   comes from Supabase when supabase-config.js is filled in (what the owner edits on
-                 admin.html). The last menu loaded is kept on the phone, so the page still works if
-                 Supabase is unreachable; an older copy on screen carries a "could not be updated"
-                 note. Without Supabase, or before it has ever answered: menu-data.js.
-  2. Language    French / English switch in the header, remembered in the browser (?lang=en forces it)
-  3. Menu        category bar and price lists; categories open when their photo banner is tapped
-  4. Search      the magnifier in the header finds a product and jumps to it
-  5. ☰ menu      opening hours, Wi-Fi, address and phone from the "Infos" tab of admin.html;
-                 the footer shows the same details (until they are loaded, it keeps its own text)
-
-  Loaded before this file: menu-data.js (MENU_DATA, CATEGORY_PLACEHOLDERS), translations.js (TEXT),
-  supabase-config.js.
-*/
-
 const LANGS = ["fr", "en"];
 const LANG_KEY = "bolivar-lang";
 const MENU_CACHE_KEY = "bolivar-menu-v1";
 const INFO_CACHE_KEY = "bolivar-info-v1";
-const FALLBACK_AFTER_MS = 6000; // Supabase slower than this: show the built-in menu meanwhile…
-const DB_TIMEOUT_MS = 30000;    // …and keep waiting this long for the real one
+const FALLBACK_AFTER_MS = 6000;
+const DB_TIMEOUT_MS = 30000;
 const DB_READY = typeof SUPABASE_URL === "string" && SUPABASE_URL !== "" &&
   typeof SUPABASE_KEY === "string" && SUPABASE_KEY !== "";
 const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80";
 
-// The menu on screen, whatever its source:
-//   [{ id, name, image, items: [{ id, name, price, desc, image, available }] }]
-// name / desc: "same in both languages" or { fr, en } (empty en → French)
 let menu = null;
-let shownJson = null; // the Supabase or saved menu on screen, to redraw only when it changed
+let shownJson = null;
 let firstRender = true;
 let lang = "fr";
-const ITEMS = new Map();          // item id -> { item, category }
-const openCategories = new Set(); // categories the customer opened, kept open after a redraw
+const ITEMS = new Map();
+const openCategories = new Set();
 let scrollSpy = null;
 
-// localStorage can be blocked (private browsing, strict settings): never let that break the page
 const storage = {
   get(key) { try { return localStorage.getItem(key); } catch { return null; } },
-  set(key, value) { try { localStorage.setItem(key, value); } catch { /* ignore */ } },
-  remove(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } }
+  set(key, value) { try { localStorage.setItem(key, value); } catch {} },
+  remove(key) { try { localStorage.removeItem(key); } catch {} }
 };
-
-/* ---------- Helpers ---------- */
 
 function slugify(text) {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
@@ -53,15 +30,12 @@ function formatPrice(price) {
   return `${Number(price).toFixed(2)} DT`;
 }
 
-// Interface text from translations.js, with {placeholders} filled in
 function t(key, values) {
   let text = TEXT[lang][key] ?? TEXT.fr[key] ?? key;
-  // A function, so "$&" typed in the search is shown as typed (not read as a replace() pattern)
   for (const name in values) text = text.replace("{" + name + "}", () => values[name]);
   return text;
 }
 
-// A menu text in the current language
 function pick(value) {
   if (!value) return "";
   return typeof value === "string" ? value : (value[lang] || value.fr);
@@ -70,8 +44,6 @@ function isText(value) {
   return typeof value === "string" || (value !== null && typeof value === "object" && typeof value.fr === "string");
 }
 
-// Build an element; text is always inserted as text, never as HTML
-// (names and descriptions come from the database, typed on the admin page)
 function el(tag, props, ...children) {
   const node = document.createElement(tag);
   for (const key in props) {
@@ -87,12 +59,9 @@ function getCategoryImage(category) {
   return category.image || DEFAULT_CATEGORY_IMAGE;
 }
 
-// Photos uploaded on the admin page have a small copy next to them ("-800." → "-480.")
 function smallPhoto(url) {
   return url && url.includes("-800.") ? url.replace("-800.", "-480.") : url;
 }
-
-/* ---------- 1. Menu data ---------- */
 
 function fromMenuData(data) {
   const both = (fr, en) => (en ? { fr, en } : fr);
@@ -128,7 +97,6 @@ function fromDatabase(rows) {
   }));
 }
 
-// A usable menu: at least one product, and every part in the expected shape
 function isMenu(data) {
   return Array.isArray(data) &&
     data.some((category) => category && Array.isArray(category.items) && category.items.length > 0) &&
@@ -150,7 +118,6 @@ async function fetchMenuFromDatabase() {
     if (!response.ok) throw new Error("Supabase answered " + response.status);
     const rows = await response.json();
     const data = Array.isArray(rows) ? fromDatabase(rows) : [];
-    // An empty answer is a fault (rules or data), never a real menu: keep what we have
     if (!isMenu(data)) throw new Error("Supabase sent no menu");
     return data;
   } finally {
@@ -158,10 +125,9 @@ async function fetchMenuFromDatabase() {
   }
 }
 
-// The copy saved on this phone; a damaged one is thrown away (it would never be replaced otherwise)
 function readCachedMenu() {
   let data;
-  try { data = JSON.parse(storage.get(MENU_CACHE_KEY) || "null"); } catch { data = undefined; } // damaged
+  try { data = JSON.parse(storage.get(MENU_CACHE_KEY) || "null"); } catch { data = undefined; }
   if (data !== null && !isMenu(data)) {
     storage.remove(MENU_CACHE_KEY);
     return null;
@@ -174,7 +140,6 @@ async function loadMenu() {
     showMenu(fromMenuData(MENU_DATA));
     return;
   }
-  // Show the copy saved on this phone straight away, then refresh it from Supabase
   const cached = readCachedMenu();
   if (cached) {
     try {
@@ -187,7 +152,6 @@ async function loadMenu() {
     }
   }
   if (!menu) showLoading();
-  // Supabase is slow: show the built-in menu meanwhile; the real one replaces it when it arrives
   const slow = setTimeout(() => {
     if (menu) return;
     showMenu(fromMenuData(MENU_DATA));
@@ -204,18 +168,17 @@ async function refreshMenu() {
     if (json !== shownJson) {
       showMenu(fresh);
       shownJson = json;
-      storage.set(MENU_CACHE_KEY, json); // saved only once it was shown without a problem
+      storage.set(MENU_CACHE_KEY, json);
     }
     setStale(false);
   } catch (error) {
     console.warn("Could not load the menu from Supabase:", error);
-    if (!menu) showMenu(fromMenuData(MENU_DATA)); // nothing better available
+    if (!menu) showMenu(fromMenuData(MENU_DATA));
     setStale(true);
-    window.addEventListener("online", refreshMenu, { once: true }); // try again when the phone is back online
+    window.addEventListener("online", refreshMenu, { once: true });
   }
 }
 
-// "The menu could not be updated" note, while an older copy is on screen
 function setStale(isStale) {
   document.getElementById("menuStale").hidden = !isStale;
 }
@@ -226,13 +189,32 @@ function showLoading() {
 }
 
 function showMenu(data) {
-  // Empty categories are not shown
   menu = data.filter((category) => category.items.length > 0);
+  const oldKeys = new Map();
+  for (const [id, { item, category }] of ITEMS) oldKeys.set(id, itemKey(category, item));
   ITEMS.clear();
+  const idByKey = new Map();
   for (const category of menu) {
-    for (const item of category.items) ITEMS.set(item.id, { item, category });
+    for (const item of category.items) {
+      ITEMS.set(item.id, { item, category });
+      const key = itemKey(category, item);
+      if (!idByKey.has(key)) idByKey.set(key, item.id);
+    }
   }
+  for (const [id, qty] of [...selection]) {
+    if (ITEMS.has(id)) continue;
+    const sameProduct = idByKey.get(oldKeys.get(id) || id);
+    if (!sameProduct) continue;
+    selection.delete(id);
+    selection.set(sameProduct, Math.min((selection.get(sameProduct) || 0) + qty, MAX_QTY));
+  }
+  for (const id of [...selection.keys()]) {
+    const entry = ITEMS.get(id);
+    if (!entry || !entry.item.available) selection.delete(id);
+  }
+  saveSelection();
   drawMenu();
+  renderSelection();
   if (searchDialog().open) renderSearch();
   if (firstRender) {
     firstRender = false;
@@ -240,14 +222,11 @@ function showMenu(data) {
   }
 }
 
-/* ---------- 2. Language ---------- */
-
 function detectLanguage() {
   const fromUrl = new URLSearchParams(location.search).get("lang");
   if (LANGS.includes(fromUrl)) return fromUrl;
   const saved = storage.get(LANG_KEY);
   if (LANGS.includes(saved)) return saved;
-  // First visit: French, unless the phone's first French or English language is English
   const preferred = (navigator.languages || [navigator.language || ""])
     .find((code) => /^(fr|en)/i.test(code));
   return preferred ? preferred.slice(0, 2).toLowerCase() : "fr";
@@ -271,10 +250,13 @@ function applyLanguage(newLang) {
     button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
   }
 
-  if (menu) drawMenu();
+  if (menu) {
+    drawMenu();
+    renderSelection();
+  }
   else if (document.querySelector("#menuContainer .menu-loading")) showLoading();
   if (searchDialog().open) renderSearch();
-  renderInfo(); // after the loop above: the footer's hours may come from Supabase
+  renderInfo();
 }
 
 function setupLanguage() {
@@ -283,7 +265,6 @@ function setupLanguage() {
       const chosen = button.dataset.lang;
       if (chosen === lang) return;
       storage.set(LANG_KEY, chosen);
-      // Keep a shared link like ?lang=en in step with the choice
       const url = new URL(location.href);
       if (url.searchParams.has("lang")) {
         url.searchParams.set("lang", chosen);
@@ -294,12 +275,11 @@ function setupLanguage() {
   }
 }
 
-/* ---------- 3. Menu ---------- */
-
 function drawMenu() {
   renderNavbar();
   renderMenu();
   setupScrollSpy();
+  updateSteppers();
 }
 
 function renderNavbar() {
@@ -319,7 +299,22 @@ function renderItem(item) {
       el("h4", {}, pick(item.name)),
       item.available ? null : el("span", { className: "item-badge" }, t("menu.unavailable")),
       item.desc ? el("div", { className: "menu-item-desc" }, pick(item.desc)) : null),
-    el("span", { className: "item-price" }, formatPrice(item.price)));
+    el("span", { className: "item-price" }, formatPrice(item.price)),
+    item.available ? stepper(item) : null);
+}
+
+function stepper(item) {
+  const name = pick(item.name);
+  return el("div", { className: "stepper", dataset: { stepper: item.id } },
+    el("button", {
+      type: "button", className: "add-btn", hidden: true,
+      dataset: { less: item.id }, attrs: { "aria-label": t("sel.less", { name }) }
+    }, icon("minus")),
+    el("span", { className: "stepper-qty", hidden: true }),
+    el("button", {
+      type: "button", className: "add-btn",
+      dataset: { add: item.id }, attrs: { "aria-label": t("sel.add", { name }) }
+    }, icon("plus")));
 }
 
 function renderCategory(category) {
@@ -349,8 +344,6 @@ function categorySection(id) {
   return document.querySelector(`.menu-category[data-category="${CSS.escape(id)}"]`);
 }
 
-// Opens or closes a category. Without animation (search, shared link), the panel has its
-// final height at once, so a jump into it lands on the right row.
 function setCategoryOpen(id, open, animate = true) {
   const section = categorySection(id);
   if (!section) return;
@@ -361,7 +354,7 @@ function setCategoryOpen(id, open, animate = true) {
   section.querySelector(".toggle-arrow").classList.toggle("open", open);
   section.querySelector(".category-toggle").setAttribute("aria-expanded", String(open));
   if (!animate) {
-    void section.offsetHeight; // apply the final height before transitions come back
+    void section.offsetHeight;
     section.classList.remove("no-anim");
   }
 }
@@ -371,6 +364,7 @@ function setupMenuClicks() {
   if (!menuContainer) return;
 
   menuContainer.addEventListener("click", (event) => {
+    if (event.target.closest(".stepper")) return;
     const btn = event.target.closest("[data-toggle]");
     if (btn) {
       const id = btn.dataset.toggle;
@@ -388,17 +382,16 @@ function setupMenuClicks() {
   });
 }
 
-// A shared link like "#nos-cafes": the category did not exist yet when the browser read it
 function jumpToSharedLink() {
   let id = "";
-  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; } // e.g. "#%E0"
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
   if (!id || !menu.some((category) => category.id === id)) return;
   const target = categorySection(id);
   if (target) target.scrollIntoView({ behavior: "instant" });
 }
 
 function setupScrollSpy() {
-  if (scrollSpy) scrollSpy.disconnect(); // the menu was redrawn
+  if (scrollSpy) scrollSpy.disconnect();
   const pills = document.querySelectorAll(".nav-pill");
   const categories = document.querySelectorAll(".menu-category");
 
@@ -416,28 +409,21 @@ function setupScrollSpy() {
   categories.forEach((cat) => scrollSpy.observe(cat));
 }
 
-/* ---------- 4. Search ---------- */
-
 function searchDialog() {
   return document.getElementById("searchDialog");
 }
 
-// "Cappuccino Spéculoos" -> "capucino speculos": lower case, no accents and no doubled
-// letters, so "creme" finds "Crème" and "capucino" or "capu" finds "Cappuccino"
 function normalize(text) {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/(.)\1+/g, "$1");
 }
 function wordsOf(text) {
   return normalize(text).split(/[^a-z0-9]+/).filter(Boolean);
 }
-// Both languages of a text, so a French or an English word finds the product
 function bothLanguages(value) {
   if (!value) return "";
   return typeof value === "string" ? value : value.fr + " " + (value.en || "");
 }
 
-// Every word typed must be the start of a word in the product's names, description or category:
-// "capu" finds "Cappuccino", and "nut" finds "Nutella" but not "Coconut"
 function findItems(query) {
   const typed = wordsOf(query);
   if (!typed.length) return [];
@@ -446,12 +432,11 @@ function findItems(query) {
     const nameWords = wordsOf(bothLanguages(item.name));
     const allWords = nameWords.concat(wordsOf(bothLanguages(item.desc) + " " + bothLanguages(category.name)));
     if (!typed.every((word) => allWords.some((w) => w.startsWith(word)))) continue;
-    // Best first: the shown name starts with the first word, then a word of the name does, then the rest
     const score = normalize(pick(item.name)).startsWith(typed[0]) ? 0
       : nameWords.some((w) => w.startsWith(typed[0])) ? 1 : 2;
     results.push({ id, score });
   }
-  return results.sort((a, b) => a.score - b.score).slice(0, 40); // same score: menu order
+  return results.sort((a, b) => a.score - b.score).slice(0, 40);
 }
 
 function renderSearch() {
@@ -497,7 +482,6 @@ function closeSearch() {
   else dialog.removeAttribute("open");
 }
 
-// Close the search, open the product's category, scroll to the product and light it up for a moment
 let foundTimer = null;
 function goToItem(id) {
   closeSearch();
@@ -505,14 +489,12 @@ function goToItem(id) {
   setCategoryOpen(ITEMS.get(id).category.id, true, false);
   const row = document.querySelector(`.menu-item[data-item="${CSS.escape(id)}"]`);
   if (!row) return;
-  // A jump, not a smooth scroll: the product can be thousands of pixels away
   row.scrollIntoView({ block: "center", behavior: "instant" });
   document.querySelectorAll(".menu-item.is-found").forEach((node) => node.classList.remove("is-found"));
-  void row.offsetWidth; // restart the highlight
+  void row.offsetWidth;
   row.classList.add("is-found");
   clearTimeout(foundTimer);
   foundTimer = setTimeout(() => row.classList.remove("is-found"), 2500);
-  // Keyboard and screen-reader users continue from the product they chose
   row.tabIndex = -1;
   row.focus({ preventScroll: true });
 }
@@ -523,11 +505,10 @@ function setupSearch() {
   document.getElementById("searchOpen").addEventListener("click", openSearch);
   document.getElementById("searchClose").addEventListener("click", closeSearch);
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) closeSearch(); // click on the dark area around the panel
+    if (event.target === dialog) closeSearch();
   });
   input.addEventListener("input", renderSearch);
   input.addEventListener("keydown", (event) => {
-    // In a search box the browser's first Esc only clears the text: close the panel at once instead
     if (event.key === "Escape") {
       event.preventDefault();
       closeSearch();
@@ -546,15 +527,12 @@ function setupSearch() {
   });
 }
 
-/* ---------- 5. ☰ menu and footer: the café's details ("Infos" tab of admin.html) ---------- */
-
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-// Same rules as the admin page: only Google Maps links, and phone numbers made of digits
 const MAPS_LINK = /^https:\/\/((www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}|maps\.app\.goo\.gl|goo\.gl\/maps)\//i;
 const PHONE = /^\+?[0-9][0-9 .-]{5,18}$/;
 const HOURS_KEYS = ["hours_week_open", "hours_week_close", "hours_weekend_open", "hours_weekend_close"];
 
-let info = {}; // the café's details (Supabase table "settings"): key -> value
+let info = {};
 let defaultMaps = "";
 let copyTimer = null;
 
@@ -565,7 +543,6 @@ function infoText(key, maxLength) {
   return hasInfo(key) ? info[key].trim().slice(0, maxLength) : "";
 }
 
-// [[label key, opening, closing], …]; the same hours on both lines become one "every day" row
 function openingHours() {
   const span = (days) => {
     const open = infoText("hours_" + days + "_open", 5);
@@ -579,19 +556,15 @@ function openingHours() {
     .map(([key, time]) => [key, ...time]);
 }
 
-// Footer rows are "<i icon></i> text": keep the icon, replace the text
 function setRowText(node, text) {
   node.replaceChildren(node.querySelector("i"), " " + text);
 }
 
-// A detail never saved on the admin page keeps the footer's own text; one saved empty
-// (or not valid) hides its row. The ☰ menu shows only what is filled in.
 function renderInfo() {
   const hours = openingHours();
   document.getElementById("hoursRows").replaceChildren(...hours.map(([key, open, close]) =>
     el("div", {}, el("dt", {}, t(key)), el("dd", { className: "side-time" }, open + " – " + close))));
   document.getElementById("sideHours").hidden = hours.length === 0;
-  // Footer: "Lun-Dim, 07:00 - 23:00", or "Lun-Ven, 07:00 - 23:00 · Sam-Dim, 09:00 - 00:00"
   const footerHours = document.getElementById("footerHours");
   if (!HOURS_KEYS.some(hasInfo)) {
     setRowText(footerHours, t("footer.hours"));
@@ -608,7 +581,6 @@ function renderInfo() {
   document.getElementById("wifiPasswordRow").hidden = !wifiPassword;
   document.getElementById("wifiCopy").hidden = !wifiPassword;
 
-  // The address opens Google Maps (the café's own link once the owner adds it)
   const mapsUrl = infoText("maps_url", 300);
   for (const link of document.querySelectorAll("[data-maps]")) link.href = MAPS_LINK.test(mapsUrl) ? mapsUrl : defaultMaps;
 
@@ -638,7 +610,6 @@ function renderInfo() {
   }
 }
 
-// The details saved on this phone first, then the latest from Supabase (same idea as the menu)
 async function loadInfo() {
   if (!DB_READY) return;
   try {
@@ -647,14 +618,14 @@ async function loadInfo() {
       info = saved;
       renderInfo();
     }
-  } catch { /* a damaged saved copy is ignored; the fresh one replaces it */ }
+  } catch {}
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DB_TIMEOUT_MS);
   try {
     const url = SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/settings?select=key,value";
     const response = await fetch(url, { headers: { apikey: SUPABASE_KEY }, signal: controller.signal, cache: "no-store" });
-    if (!response.ok) throw new Error("Supabase answered " + response.status); // 404: the table is not there yet
+    if (!response.ok) throw new Error("Supabase answered " + response.status);
     const rows = await response.json();
     if (!Array.isArray(rows)) throw new Error("Supabase sent no details");
     info = Object.fromEntries(rows.filter((row) => row && typeof row.key === "string" && typeof row.value === "string")
@@ -676,12 +647,10 @@ async function copyWifiPassword() {
     await navigator.clipboard.writeText(password);
     copied = true;
   } catch {
-    // Older browsers, or copying not allowed: copy from a hidden text field instead.
-    // It goes inside the open panel, since the rest of the page cannot be used meanwhile.
     const field = el("textarea", { value: password, readOnly: true, className: "visually-hidden" });
     document.getElementById("sideMenu").append(field);
     field.select();
-    try { copied = document.execCommand("copy"); } catch { /* not supported */ }
+    try { copied = document.execCommand("copy"); } catch {}
     field.remove();
     document.getElementById("wifiCopy").focus();
   }
@@ -703,18 +672,201 @@ function setupSideMenu() {
   });
   document.getElementById("sideMenuClose").addEventListener("click", close);
   sideMenu.addEventListener("click", (event) => {
-    if (event.target === sideMenu) close(); // click on the dark area beside the panel
+    if (event.target === sideMenu) close();
   });
   document.getElementById("wifiCopy").addEventListener("click", copyWifiPassword);
 
-  // "@account", from the address of the Instagram link
   const instagram = document.getElementById("findInstagram");
   instagram.textContent = "@" + new URL(instagram.href).pathname.split("/").filter(Boolean)[0];
 
   defaultMaps = document.querySelector("[data-maps]").getAttribute("href");
 }
 
-/* ---------- Start ---------- */
+const SELECTION_KEY = "bolivar-selection";
+const MAX_QTY = 99;
+const selection = new Map();
+
+const ICONS = {
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 12h14"/></svg>'
+};
+function icon(name) {
+  const holder = document.createElement("span");
+  holder.innerHTML = ICONS[name];
+  return holder.firstElementChild;
+}
+
+function itemKey(category, item) {
+  const name = typeof item.name === "string" ? item.name : item.name.fr;
+  return category.id + "/" + slugify(name);
+}
+
+function loadSelection() {
+  try {
+    const saved = JSON.parse(storage.get(SELECTION_KEY) || "[]");
+    if (!Array.isArray(saved)) return;
+    for (const pair of saved) {
+      if (!Array.isArray(pair)) continue;
+      const [id, qty] = pair;
+      if (typeof id === "string" && Number.isInteger(qty) && qty > 0) selection.set(id, Math.min(qty, MAX_QTY));
+    }
+  } catch {}
+}
+
+function saveSelection() {
+  storage.set(SELECTION_KEY, JSON.stringify([...selection]));
+}
+
+function selectionName(id) {
+  const entry = ITEMS.get(id);
+  return entry ? pick(entry.item.name) : "";
+}
+
+function updateSteppers() {
+  for (const box of document.querySelectorAll("[data-stepper]")) {
+    const id = box.dataset.stepper;
+    const qty = selection.get(id) || 0;
+    const name = selectionName(id);
+    const less = box.querySelector("[data-less]");
+    const count = box.querySelector(".stepper-qty");
+    const add = box.querySelector("[data-add]");
+    less.hidden = qty === 0;
+    count.hidden = qty === 0;
+    count.textContent = String(qty);
+    add.disabled = qty >= MAX_QTY;
+    add.setAttribute("aria-label", t(qty ? "sel.more" : "sel.add", { name }));
+  }
+}
+
+function renderSelection() {
+  let count = 0;
+  let total = 0;
+  const rows = [];
+  for (const [id, qty] of selection) {
+    const entry = ITEMS.get(id);
+    if (!entry) continue;
+    count += qty;
+    total += qty * entry.item.price;
+    const name = pick(entry.item.name);
+    rows.push(el("li", { className: "sel-row" },
+      el("p", { className: "sel-row-name" }, name, el("span", { className: "sel-row-cat" }, pick(entry.category.name))),
+      el("div", { className: "sel-row-side" },
+        el("div", { className: "sel-qty" },
+          el("button", { type: "button", className: "add-btn", dataset: { qty: id, delta: "-1" }, attrs: { "aria-label": t("sel.less", { name }) } }, icon("minus")),
+          el("span", { className: "stepper-qty" }, String(qty)),
+          el("button", {
+            type: "button", className: "add-btn", disabled: qty >= MAX_QTY,
+            dataset: { qty: id, delta: "1" }, attrs: { "aria-label": t("sel.more", { name }) }
+          }, icon("plus"))),
+        el("span", { className: "item-price" }, formatPrice(qty * entry.item.price)))));
+  }
+  document.getElementById("selectionList").replaceChildren(...rows);
+  document.getElementById("selectionEmpty").hidden = rows.length > 0;
+  document.getElementById("selectionClear").hidden = rows.length === 0;
+  document.getElementById("selectionSum").textContent = formatPrice(total);
+
+  const pill = document.getElementById("selectionOpen");
+  pill.hidden = count === 0;
+  document.getElementById("selectionCount").textContent = String(count);
+  document.getElementById("selectionTotal").textContent = formatPrice(total);
+  pill.setAttribute("aria-label", t("sel.openLabel", { n: count, price: formatPrice(total) }));
+  document.body.classList.toggle("has-selection", count > 0);
+  updateSteppers();
+}
+
+let toastTimer = null;
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function addToSelection(id, button) {
+  if (!ITEMS.has(id)) return;
+  const qty = selection.get(id) || 0;
+  if (qty >= MAX_QTY) return;
+  selection.set(id, qty + 1);
+  saveSelection();
+  renderSelection();
+  showToast(t("sel.added", { name: selectionName(id) }));
+  if (button) {
+    button.classList.add("is-added");
+    setTimeout(() => button.classList.remove("is-added"), 700);
+  }
+  const pill = document.getElementById("selectionOpen");
+  pill.classList.remove("bump");
+  void pill.offsetWidth;
+  pill.classList.add("bump");
+}
+
+function removeFromSelection(id) {
+  const qty = selection.get(id) || 0;
+  if (!qty) return;
+  if (qty > 1) selection.set(id, qty - 1);
+  else selection.delete(id);
+  saveSelection();
+  renderSelection();
+  showToast(t("sel.removed", { name: selectionName(id) }));
+  if (qty === 1) {
+    const add = document.querySelector(`[data-stepper="${CSS.escape(id)}"] [data-add]`);
+    if (add) add.focus();
+  }
+}
+
+function changeQuantity(id, delta) {
+  const qty = Math.min((selection.get(id) || 0) + delta, MAX_QTY);
+  if (qty <= 0) selection.delete(id);
+  else selection.set(id, qty);
+  saveSelection();
+  renderSelection();
+}
+
+function setupSelection() {
+  const dialog = document.getElementById("selectionDialog");
+  const closeButton = document.getElementById("selectionClose");
+  const close = () => {
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  };
+  document.getElementById("selectionOpen").addEventListener("click", () => {
+    renderSelection();
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+  });
+  closeButton.addEventListener("click", close);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) close();
+  });
+  document.getElementById("selectionClear").addEventListener("click", () => {
+    selection.clear();
+    saveSelection();
+    renderSelection();
+    closeButton.focus();
+  });
+
+  document.addEventListener("click", (event) => {
+    const add = event.target.closest("[data-add]");
+    if (add) {
+      addToSelection(add.dataset.add, add);
+      return;
+    }
+    const less = event.target.closest("[data-less]");
+    if (less) {
+      removeFromSelection(less.dataset.less);
+      return;
+    }
+    const qtyButton = event.target.closest("[data-qty]");
+    if (qtyButton) {
+      const { qty: id, delta } = qtyButton.dataset;
+      changeQuantity(id, Number(delta));
+      const buttons = [...document.querySelectorAll("#selectionList [data-qty]")].filter((button) => button.dataset.qty === id);
+      const same = buttons.find((button) => button.dataset.delta === delta);
+      (same && !same.disabled ? same : buttons.find((button) => !button.disabled) || closeButton).focus();
+    }
+  });
+}
 
 function init() {
   if (typeof MENU_DATA === "undefined" || typeof TEXT === "undefined") {
@@ -724,7 +876,9 @@ function init() {
   setupMenuClicks();
   setupSearch();
   setupSideMenu();
+  setupSelection();
   setupLanguage();
+  loadSelection();
   applyLanguage(detectLanguage());
   loadMenu();
   loadInfo();

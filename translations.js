@@ -1,14 +1,3 @@
-/*
-  Bolivar — interface text in French (fr) and English (en).
-
-  In index.html:
-  - data-i18n="key"                → the element's text becomes TEXT[lang][key]
-  - data-i18n-attr="aria-label:key" → sets an attribute instead (several: "a:key1;b:key2")
-  The French text written in index.html is what shows before JavaScript runs.
-  {n}, {q}, {time} are placeholders filled in by script.js.
-  Product and category names are not here: they come from the menu (menu-data.js / Supabase).
-*/
-
 const TEXT = {
   fr: {
     "meta.title": "Bolivar | Coffee & Lounge",
@@ -59,7 +48,21 @@ const TEXT = {
     "footer.review": "Laisser un avis",
     "footer.follow": "Suivez-nous",
     "footer.rights": "Tous droits réservés. Réalisé par Youssef Maazaoui",
-    "footer.top": "Retour en haut"
+    "footer.top": "Retour en haut",
+
+    "sel.open": "Ma sélection",
+    "sel.openLabel": "Ouvrir ma sélection : {n} produit(s), {price}",
+    "sel.title": "Ma sélection",
+    "sel.hint": "Montrez cette liste à votre serveur pour commander. Elle reste enregistrée sur votre téléphone.",
+    "sel.empty": "Votre sélection est vide. Touchez + sur la carte pour ajouter un produit.",
+    "sel.total": "Total",
+    "sel.clear": "Vider la sélection",
+    "sel.close": "Fermer",
+    "sel.add": "Ajouter {name} à ma sélection",
+    "sel.more": "Ajouter un {name}",
+    "sel.less": "Retirer un {name}",
+    "sel.added": "Ajouté : {name}",
+    "sel.removed": "Retiré : {name}"
   },
 
   en: {
@@ -111,6 +114,20 @@ const TEXT = {
     "footer.review": "Leave a review",
     "footer.follow": "Follow us",
     "footer.rights": "All rights reserved. Made by Youssef Maazaoui",
-    "footer.top": "Back to top"
+    "footer.top": "Back to top",
+
+    "sel.open": "My selection",
+    "sel.openLabel": "Open my selection: {n} item(s), {price}",
+    "sel.title": "My selection",
+    "sel.hint": "Show this list to your server to order. It stays saved on your phone.",
+    "sel.empty": "Your selection is empty. Tap + on the menu to add an item.",
+    "sel.total": "Total",
+    "sel.clear": "Clear selection",
+    "sel.close": "Close",
+    "sel.add": "Add {name} to my selection",
+    "sel.more": "Add one more {name}",
+    "sel.less": "Remove one {name}",
+    "sel.added": "Added: {name}",
+    "sel.removed": "Removed: {name}"
   }
 };

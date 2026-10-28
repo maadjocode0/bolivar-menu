@@ -13,7 +13,6 @@
   <link rel="icon" type="image/png" href="logo.png" />
 </head>
 <body>
-  <!-- ============ HEADER: ☰ menu, logo, search, FR / EN ============ -->
   <header class="site-header" id="siteHeader">
     <div class="header-start">
       <button class="header-menu" type="button" id="sideMenuOpen" aria-haspopup="dialog" aria-controls="sideMenu"
@@ -76,7 +75,6 @@
         <div class="site-footer-col">
           <h4 data-i18n="footer.contact">Contact</h4>
           <ul>
-            <!-- Phone, address, Maps link and hours: replaced by the "Infos" tab of admin.html once saved there -->
             <li>
               <a href="tel:+21622535138" id="footerPhone">
                 <i class="fa-solid fa-phone"></i> +216 22 535 138
@@ -124,7 +122,33 @@
     </div>
   </footer>
 
-  <!-- ============ SEARCH (opened by the magnifier in the header) ============ -->
+  <button class="sel-pill" id="selectionOpen" type="button" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.1C.9 8.6 2.9 5 6.4 5c2 0 3.6 1.1 4.6 2.6.3.4.7.4 1 0C13 6.1 14.6 5 16.6 5c3.5 0 5.5 3.6 4 6.9C19.5 16.4 12 21 12 21z"/></svg>
+    <span data-i18n="sel.open">Ma sélection</span>
+    <span class="sel-pill-count" id="selectionCount">0</span>
+    <span class="sel-pill-total" id="selectionTotal">0.00 DT</span>
+  </button>
+
+  <dialog class="sel-sheet" id="selectionDialog" aria-labelledby="selectionTitle">
+    <div class="sel-inner">
+      <div class="sel-head">
+        <h2 id="selectionTitle" data-i18n="sel.title">Ma sélection</h2>
+        <button class="icon-btn" type="button" id="selectionClose" data-i18n-attr="aria-label:sel.close" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="sel-hint" data-i18n="sel.hint">Montrez cette liste à votre serveur pour commander. Elle reste enregistrée sur votre téléphone.</p>
+      <ul class="sel-list" id="selectionList"></ul>
+      <p class="sel-empty" id="selectionEmpty" data-i18n="sel.empty">Votre sélection est vide. Touchez + sur la carte pour ajouter un produit.</p>
+      <div class="sel-foot">
+        <button class="text-btn" type="button" id="selectionClear" data-i18n="sel.clear">Vider la sélection</button>
+        <p class="sel-total"><span data-i18n="sel.total">Total</span> <strong id="selectionSum">0.00 DT</strong></p>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <dialog class="search-sheet" id="searchDialog" aria-labelledby="searchTitle">
     <div class="search-inner">
       <h2 class="visually-hidden" id="searchTitle" data-i18n="search.title">Rechercher dans la carte</h2>
@@ -144,8 +168,6 @@
     </div>
   </dialog>
 
-  <!-- ============ ☰ MENU: opening hours, Wi-Fi, contact (from the admin's "Infos" tab) ============ -->
-  <!-- A section or row is shown only once it has information; Instagram is always known -->
   <dialog class="side-menu" id="sideMenu" aria-labelledby="sideMenuTitle">
     <div class="side-inner">
       <div class="side-head">

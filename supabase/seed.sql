@@ -1,10 +1,3 @@
--- =============================================================================
--- Bolivar — the current menu, to load once after schema.sql
--- (generated from menu-data.js: 25 categories, 138 items)
--- Category photos are the Unsplash photos the site already uses; the owner can replace them
--- on admin.html. The café's details are the ones shown in the footer.
--- =============================================================================
-
 do $$
 begin
   if exists (select 1 from public.items) or exists (select 1 from public.categories) then

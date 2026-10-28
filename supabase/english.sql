@@ -1,10 +1,3 @@
--- =============================================================================
--- Bolivar — English names for the menu (FR / EN switch on the website)
--- Run once in the Supabase dashboard: SQL Editor → New query → paste → Run.
--- Only rows still carrying the original French name are changed; an empty English
--- name means the French one is shown in English too.
--- =============================================================================
-
 update public.categories set name_en = 'Breakfast' where id = 'petit-dejeuner' and name_en is null;
 update public.categories set name_en = 'Our Coffees' where id = 'nos-cafes' and name_en is null;
 update public.categories set name_en = 'Teas' where id = 'les-thes' and name_en is null;
