@@ -7,7 +7,8 @@
     make an item available / unavailable, change its photo, edit its name and description
     (FR / EN) or remove its photo, delete it.
   - Categories: add one (name FR / EN and photo, placed at the end of the menu), change their
-    order by dragging (SortableJS) or with the arrows, change a photo.
+    order by dragging (SortableJS) or with the arrows, change a photo, rename one, delete one
+    (with its products).
   - Infos: opening hours, Wi-Fi, address, Google Maps link and phone, shown in the ☰ menu of
     the website and in its footer (table public.settings).
 
@@ -457,6 +458,7 @@
     if (target.kind === 'new') setNewProductPhoto(file);
     else if (target.kind === 'newCategory') setNewCategoryPhoto(file);
     else if (target.kind === 'edit') setEditPhoto({ file, remove: false });
+    else if (target.kind === 'editCategory') setCategoryEditPhoto(file);
     else replacePhoto(target, file);
   });
 
@@ -516,6 +518,20 @@
           // The public menu hides a category without products
           el('small', {}, plural(count, 'produit') + (count ? '' : ' · pas encore sur la carte'))),
         el('div', { className: 'adm-cat-actions' },
+          el('button', {
+            type: 'button',
+            className: 'adm-icon-btn adm-edit',
+            title: 'Nom et photo',
+            attrs: { 'aria-label': 'Modifier la catégorie ' + category.name_fr },
+            dataset: { editCategory: category.id },
+          }, icon('pencil')),
+          el('button', {
+            type: 'button',
+            className: 'adm-icon-btn adm-delete',
+            attrs: { 'aria-label': 'Supprimer la catégorie ' + category.name_fr },
+            dataset: { deleteCategory: category.id },
+          }, icon('trash'))),
+        el('div', { className: 'adm-cat-move' },
           el('button', {
             type: 'button', className: 'move-btn', disabled: index === 0,
             attrs: { 'aria-label': 'Monter ' + category.name_fr }, dataset: { move: '-1' },
@@ -585,6 +601,16 @@
     const remove = event.target.closest('[data-delete-id]');
     if (remove) {
       deleteItem(remove.dataset.deleteId);
+      return;
+    }
+    const editCategory = event.target.closest('[data-edit-category]');
+    if (editCategory) {
+      openCategoryEditDialog(editCategory.dataset.editCategory);
+      return;
+    }
+    const removeCategory = event.target.closest('[data-delete-category]');
+    if (removeCategory) {
+      deleteCategory(removeCategory.dataset.deleteCategory);
       return;
     }
     const move = event.target.closest('[data-move]');
@@ -659,7 +685,8 @@
     preview.hidden = !src;
     if (src) preview.src = src;
     else preview.removeAttribute('src');
-    $(prefix + '-photo-clear').hidden = !src;
+    const clear = $(prefix + '-photo-clear'); // a category keeps its photo: no "Retirer" there
+    if (clear) clear.hidden = !src;
     $(prefix + '-photo-btn').textContent = src ? 'Changer la photo' : 'Choisir une photo';
   }
 
@@ -834,6 +861,136 @@
       saveButton.textContent = 'Ajouter';
     }
   });
+
+  /* ---------- "Edit a category" sheet (name and photo) and deleting a category ---------- */
+
+  const categoryEditDialog = $('category-edit-dialog');
+  const categoryEditForm = $('category-edit-form');
+  let editingCategoryId = null;   // category open in the "edit" sheet
+  let categoryEditPhoto = null;   // new photo waiting in that sheet (a category always keeps one)
+
+  function setCategoryEditPhoto(file) {
+    categoryEditPhoto = file;
+    const category = categories.find((row) => row.id === editingCategoryId);
+    showPhotoPreview('category-edit', file || (category ? smallPhoto(category.image_url) : null));
+  }
+
+  function openCategoryEditDialog(id) {
+    const category = categories.find((row) => row.id === id);
+    if (!category) return;
+    editingCategoryId = id;
+    $('category-edit-current').textContent = category.name_fr + ' · ' + plural(itemsOf(id).length, 'produit');
+    categoryEditForm.nameFr.value = category.name_fr;
+    categoryEditForm.nameEn.value = category.name_en || '';
+    $('category-edit-error').textContent = '';
+    setCategoryEditPhoto(null);
+    openDialog(categoryEditDialog); // focus goes to the first button, so the phone keyboard does not pop up
+  }
+
+  $('category-edit-photo-btn').addEventListener('click', () => choosePhoto({ kind: 'editCategory' }));
+
+  categoryEditForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const category = categories.find((row) => row.id === editingCategoryId);
+    if (!category) return closeDialog(categoryEditDialog);
+
+    const nameFr = categoryEditForm.nameFr.value.trim();
+    const nameEn = categoryEditForm.nameEn.value.trim() || null; // empty: the French name is shown in English too
+    const refuse = (message, field) => {
+      $('category-edit-error').textContent = message;
+      field.focus();
+    };
+    if (!nameFr) return refuse('Le nom est obligatoire.', categoryEditForm.nameFr);
+    if (categories.some((row) => row.id !== category.id && row.name_fr.toLowerCase() === nameFr.toLowerCase())) {
+      return refuse('Une catégorie porte déjà ce nom.', categoryEditForm.nameFr);
+    }
+    // The id (used in the menu's links) stays the same when the category is renamed
+    const changes = {};
+    if (nameFr !== category.name_fr) changes.name_fr = nameFr;
+    if (nameEn !== (category.name_en || null)) changes.name_en = nameEn;
+    if (!categoryEditPhoto && !Object.keys(changes).length) {
+      closeDialog(categoryEditDialog);
+      toast('Aucune modification');
+      return;
+    }
+
+    const saveButton = $('category-edit-save');
+    saveButton.disabled = true;
+    saveButton.textContent = 'Enregistrement…';
+    $('category-edit-error').textContent = '';
+    setBusy(categoryEditDialog, true);
+    let saved = null;
+    let newUrl = null;
+    try {
+      if (categoryEditPhoto) newUrl = changes.image_url = await uploadPhotos('categories', category.id, categoryEditPhoto);
+      const { data, error } = await db.from('categories').update(changes).eq('id', category.id)
+        .select('id, name_fr, name_en, image_url');
+      if (error) throw error;
+      if (!data || !data.length) throw new Error('accès refusé');
+      saved = data[0];
+    } catch (error) {
+      console.error(error);
+      if (newUrl) await removeStoredPhoto(newUrl);
+      sheetError(categoryEditDialog, $('category-edit-error'), "La catégorie n'a pas été modifiée : " + (error.message || 'erreur inconnue') + '.');
+      return;
+    } finally {
+      setBusy(categoryEditDialog, false);
+      saveButton.disabled = false;
+      saveButton.textContent = 'Enregistrer';
+    }
+
+    const oldUrl = category.image_url;
+    Object.assign(category, saved);
+    closeDialog(categoryEditDialog);
+    renderCategories();
+    renderCategoryFilter();
+    renderItems();
+    const again = $('categories-list').querySelector('[data-edit-category="' + CSS.escape(category.id) + '"]');
+    if (again) again.focus();
+    const what = newUrl && Object.keys(changes).length > 1 ? 'Modifications enregistrées'
+      : newUrl ? 'Photo mise à jour' : 'Nom enregistré';
+    toast(what + ' : ' + category.name_fr);
+    if (newUrl) await removeStoredPhoto(oldUrl);
+  });
+
+  // A category is deleted together with its products (the database refuses to keep products
+  // without a category), after a confirmation that says how many products go with it
+  async function deleteCategory(id) {
+    const category = categories.find((row) => row.id === id);
+    if (!category) return;
+    const own = itemsOf(id);
+    const question = own.length
+      ? 'Supprimer la catégorie « ' + category.name_fr + ' » et ' + (own.length > 1 ? 'ses ' : 'son ') + plural(own.length, 'produit') + ' ?'
+      : 'Supprimer la catégorie « ' + category.name_fr + ' » ?';
+    if (!confirm(question + '\nCette action est définitive.')) return;
+
+    if (own.length) {
+      const { data, error } = await db.from('items').delete().eq('category_id', id).select('id, image_url');
+      const gone = new Set((data || []).map((row) => row.id));
+      items = items.filter((row) => !gone.has(row.id));
+      for (const row of data || []) await removeStoredPhoto(row.image_url);
+      if (error || gone.size !== own.length) {
+        fail(error, "les produits de la catégorie n'ont pas tous été supprimés");
+        renderItems();
+        renderCategories();
+        return;
+      }
+    }
+    const { data, error } = await db.from('categories').delete().eq('id', id).select('id');
+    if (error || !data || !data.length) {
+      fail(error, "la catégorie n'a pas été supprimée");
+      renderItems();
+      renderCategories();
+      return;
+    }
+    categories = categories.filter((row) => row.id !== id);
+    await removeStoredPhoto(category.image_url);
+    renderCategories();
+    renderCategoryFilter();
+    renderItems();
+    $('add-category').focus(); // the row that had the focus is gone
+    toast('Catégorie « ' + category.name_fr + ' » supprimée' + (own.length ? ' avec ' + plural(own.length, 'produit') : ''));
+  }
 
   /* ---------- "Infos" tab (footer of the website) ---------- */
 

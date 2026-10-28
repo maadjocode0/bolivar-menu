@@ -104,7 +104,9 @@
           <button class="btn btn-wine" type="button" id="add-category">+ Ajouter une catégorie</button>
         </div>
         <p class="admin-muted admin-hint">Faites glisser <span class="drag-hint" aria-hidden="true">⠿</span> pour
-          changer l'ordre des catégories sur la carte, ou utilisez les flèches. L'ordre est enregistré tout de suite.</p>
+          changer l'ordre des catégories sur la carte, ou utilisez les flèches. L'ordre est enregistré tout de suite.
+          Le crayon <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/></svg>
+          change le nom ou la photo ; la corbeille supprime la catégorie avec ses produits.</p>
         <ul class="adm-cats" id="categories-list"></ul>
       </div>
 
@@ -262,6 +264,45 @@
       <div class="sel-foot">
         <button class="text-btn" type="button" data-close-dialog>Annuler</button>
         <button class="btn btn-wine" type="submit" id="category-save">Ajouter</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============ EDIT A CATEGORY (name and photo) ============ -->
+  <dialog class="sel-sheet admin-dialog" id="category-edit-dialog" aria-labelledby="category-edit-title">
+    <form class="sel-inner" id="category-edit-form" novalidate>
+      <div class="sel-head">
+        <h2 id="category-edit-title">Modifier la catégorie</h2>
+        <button class="icon-btn" type="button" data-close-dialog aria-label="Fermer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="sel-hint edit-product" id="category-edit-current"></p>
+
+      <div class="admin-form admin-dialog-body">
+        <label class="field">
+          <span>Nom *</span>
+          <input name="nameFr" maxlength="60" required autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Nom en anglais</span>
+          <input name="nameEn" maxlength="60" placeholder="Vide = nom français" autocomplete="off">
+        </label>
+
+        <div class="field">
+          <span>Photo</span>
+          <div class="photo-pick">
+            <img class="photo-preview" id="category-edit-photo-preview" alt="" hidden>
+            <button class="btn btn-outline" type="button" id="category-edit-photo-btn">Changer la photo</button>
+          </div>
+          <p class="admin-muted photo-note">Elle sert de bannière à la catégorie sur la carte.</p>
+        </div>
+        <p class="form-error" id="category-edit-error" role="alert"></p>
+      </div>
+
+      <div class="sel-foot">
+        <button class="text-btn" type="button" data-close-dialog>Annuler</button>
+        <button class="btn btn-wine" type="submit" id="category-edit-save">Enregistrer</button>
       </div>
     </form>
   </dialog>
